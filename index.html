@@ -2,333 +2,193 @@
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
-<title>Web Chat + Game Bảo Vệ Cô Gái</title>
+<title>Game Bảo Vệ Cô Gái - Flappy Pro + Skin + Sound + Music</title>
 <style>
-html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;font-family:Arial,sans-serif;}
-.chat-box{position:fixed;top:10px;left:10px;width:320px;max-height:90%;background:white;padding:20px;border-radius:12px;box-shadow:0 0 10px rgba(0,0,0,0.3);display:flex;flex-direction:column;z-index:1000;}
-#messages{flex:1;overflow-y:auto;border:1px solid #ddd;padding:10px;border-radius:8px;margin-bottom:10px;background:#fafafa;}
-.msg{padding:6px;margin:5px 0;border-radius:6px;word-wrap:break-word;}
-input{width:75%;padding:8px;margin-right:5px;}
-button{width:20%;padding:9px;background:#007bff;color:white;border:none;border-radius:6px;cursor:pointer;}
-button:hover{background:#0056c1;}
-#game-container{position:fixed;top:0;left:0;width:100%;height:100%;display:none;flex-direction:column;align-items:center;justify-content:center;z-index:999;background:black;}
-#start-screen{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(255,255,255,0.8);padding:20px;border-radius:12px;text-align:center;z-index:1000;}
-#start-screen button{padding:10px 20px;font-size:18px;border:none;border-radius:10px;cursor:pointer;margin-top:10px;}
-#jump-btn {
-    position: fixed;
-    bottom: 15%;
-    left: 50%;
-    transform: translateX(-50%);
-    padding: 20px 40px;
-    font-size: 24px;
-    border: none;
-    border-radius: 15px;
-    background: #f1c40f;
-    color: black;
-    font-weight: bold;
-    cursor: pointer;
-    z-index: 1000;
-    display: none;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-    transition: transform 0.1s ease;
-}
-#jump-btn:active {
-    transform: translateX(-50%) scale(0.95);
-    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-}
-#game-over{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);display:none;flex-direction:column;align-items:center;justify-content:center;background:rgba(0,0,0,0.8);padding:30px;border-radius:12px;text-align:center;color:white;z-index:1001;}
-#game-over button{padding:20px 40px;font-size:22px;border:none;border-radius:12px;background:#f1c40f;cursor:pointer;margin-top:20px;}
-canvas{display:block;}
+html, body { margin:0; padding:0; background:#111; height:100%; overflow:hidden; font-family:Arial,sans-serif; color:white;}
+#start-screen, #game-over-screen { position:absolute; inset:0; background:#000000cc; display:flex; flex-direction:column; justify-content:center; align-items:center; gap:20px; font-size:28px; z-index:10;}
+button { padding:12px 20px; font-size:20px; border-radius:10px; border:none; cursor:pointer; background:#00c8ff; color:black; font-weight:bold;}
+#jump-btn { display:none; position:absolute; bottom:20px; left:50%; transform:translateX(-50%); z-index:5;}
+#shop-btn { position:absolute; top:20px; right:20px; z-index:5; font-size:18px;}
+#shop { position:absolute; top:60px; right:20px; width:180px; background:#222; border:2px solid #00c8ff; border-radius:10px; padding:10px; display:none; z-index:6;}
+.shop-item { display:flex; justify-content:space-between; margin:5px 0;}
+canvas { background:#222; display:block; margin:0 auto;}
+.name-tag { position:absolute; font-size:16px; color:yellow; text-shadow:1px 1px 2px black; pointer-events:none; white-space:nowrap;}
 </style>
 </head>
 <body>
 
-<div class="chat-box" id="chat-box">
-<h3>Lô! Đây là địa bàn của anh Khôi top1 sever trái đất</h3>
-<div id="messages"></div>
-<div style="display:flex;">
-<input type="text" id="chat-input" placeholder="Nhập tin nhắn...">
-<button id="send-btn">Gửi</button>
-</div>
-</div>
-
-<div id="game-container">
 <div id="start-screen">
-<h2>BẢO VỆ CÔ GÁI KHỎI NHỮNG CHIẾC GAI BIẾN THÁI</h2>
-<p>Nhấn Start để bắt đầu</p>
-<button id="start-btn">Start</button>
-</div>
-<canvas id="game"></canvas>
-<button id="jump-btn">Bay</button>
-<div id="game-over">
-<h1>Game Over!</h1>
-<p id="final-score"></p>
-<p id="best-score"></p>
-<button id="restart-btn">Làm lại cuộc đời</button>
-</div>
+    <h2>Game Bảo Vệ Cô Gái</h2>
+    <button id="start-btn">Start</button>
 </div>
 
-<audio id="flap-sound" src="flap.mp3"></audio>
-<audio id="hit-sound" src="hit.mp3"></audio>
-<audio id="point-sound" src="point.mp3"></audio>
+<div id="game-over-screen" style="display:none;">
+    <h2>Thua rồi!</h2>
+    <p id="final-score"></p>
+    <button id="restart-btn">Chơi lại</button>
+</div>
+
+<canvas id="gameCanvas" width="420" height="600"></canvas>
+<button id="jump-btn">BAY</button>
+<button id="shop-btn">🛒 Shop</button>
+<div id="shop">
+    <h3>Shop Skin</h3>
+    <div class="shop-item" data-cost="10" data-color="pink">🌸 Hồng - 10 điểm <button>Buy</button></div>
+    <div class="shop-item" data-cost="20" data-color="cyan">💧 Xanh - 20 điểm <button>Buy</button></div>
+    <div class="shop-item" data-cost="30" data-color="gold">⭐ Vàng - 30 điểm <button>Buy</button></div>
+</div>
+
+<div id="name-container"></div>
 
 <script>
-// ===== Chat + mật khẩu =====
-const GAME_PASSWORD="đã được anh khôi cho phép";
-function addMessage(text,sender="user"){
-    const msg=document.createElement("div");
-    msg.className="msg";
-    msg.style.background=sender==="đệ anh Khôi"?"#d1e7dd":"#f8d7da";
-    msg.innerText=(sender? sender+": ":"") + text;
-    document.getElementById("messages").appendChild(msg);
-    document.getElementById("messages").scrollTop=document.getElementById("messages").scrollHeight;
-}
-function botReply(text){
-    text=text.trim().toLowerCase();
-    let reply="IM MỒM NGAY !";
-    if(text.includes("hi")||text.includes("hey")) reply="sao? 👋";
-    else if(text.includes("thích gì")) reply="đếck quan tâm";
-    else if(text.includes("game")) reply="HỎI ANH KHÔI DZ!";
-    addMessage(reply,"đệ anh Khôi");
-}
-document.getElementById("send-btn").addEventListener("click",()=>{
-    const input=document.getElementById("chat-input");
-    const text=input.value;
-    if(text.trim()==="") return;
-    addMessage(text,"Bạn");
-    input.value="";
-    botReply(text);
-    if(text.trim().toLowerCase()===GAME_PASSWORD.toLowerCase()){
-        document.getElementById("chat-box").style.display="none";
-        openGame();
-    }
-});
-document.getElementById("chat-input").addEventListener("keydown",e=>{if(e.key==="Enter") document.getElementById("send-btn").click();});
+const canvas=document.getElementById("gameCanvas");
+const ctx=canvas.getContext("2d");
 
-// ===== Game =====
-let canvas=document.getElementById("game"), ctx;
-let bird, pipes, score, running, anim, shieldActive=false, shieldTimer=0, speed=3;
-let lastTime=0, lastPipeTime=0, shieldIcon=null;
-const names=["Hùng","Hoàng","Việt","Tiến","Tín","Khoa","Sáng","Hậu","Duy","Phúc","Điền","Trung","Huy","Thắng","Quyền","Nguyên"];
-const rainbowColors=["red","orange","yellow","green","blue","indigo","violet"];
-let nameIndex=0,colorIndex=0;
-let bestScore=parseInt(localStorage.getItem("bestScore")||0);
+// Nhân vật
+let girl={x:80, y:250, radius:18, velocity:0, color:"pink", angle:0, flash:false, flashTimer:0};
 
-let bg=new Image(); bg.src="bg.jpg";
-let girlImg=new Image(); girlImg.src="girl.png";
+// Vật lý
+let gravity=0.35, jumpPower=-7;
 
-function resizeCanvas(){ canvas.width=window.innerWidth; canvas.height=window.innerHeight; }
-window.addEventListener("resize",resizeCanvas); resizeCanvas();
+// Pipes
+let pipes=[], pipeGap=160, pipeWidth=60, pipeSpeed=2.5;
+let score=0, running=false, spawnTimer=0;
+const nameContainer=document.getElementById("name-container");
+const randomNames=["Noob","ProVip","ThanhNiênCứng","GáiXinh","Boy1m85","SiuNhan"];
 
-function openGame(){
-    document.getElementById("game-container").style.display="flex";
-    document.getElementById("start-screen").style.display="flex";
-    ctx=canvas.getContext("2d");
+// Shop
+const shopBtn=document.getElementById("shop-btn");
+const shopDiv=document.getElementById("shop");
+shopBtn.addEventListener("click",()=>{shopDiv.style.display = shopDiv.style.display==="none"?"block":"none";});
+
+/* ======= ÂM THANH ======= */
+const soundJump = new Audio("data:audio/wav;base64,UklGRhIAAABXQVZFZm10IBAAAAABAAEAQB8AAIA+AAACABAAZGF0YQgAAAAA");
+const soundHit = new Audio("data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAIA+AAACABAAZGF0YQgAAAAA");
+const soundBuy  = new Audio("data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAIA+AAACABAAZGF0YQgAAAAA");
+const soundPoint = new Audio("data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAIA+AAACABAAZGF0YQgAAAAA");
+const bgMusic = new Audio("data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAIA+AAACABAAZGF0YQgAAAAA");
+bgMusic.loop=true; bgMusic.volume=0.2;
+
+/* SPAWN PIPE */
+function spawnPipe(){
+    const topHeight=Math.random()*250+50;
+    const bottomHeight=canvas.height - topHeight - pipeGap;
+    const id=Math.random().toString(36).substring(2,9);
+    pipes.push({x:canvas.width, topHeight, bottomHeight, id, offset:Math.random()*10});
+    const nameTag=document.createElement("div");
+    nameTag.className="name-tag"; nameTag.id="name-"+id;
+    nameTag.innerText=randomNames[Math.floor(Math.random()*randomNames.length)];
+    nameContainer.appendChild(nameTag);
 }
 
-// Start button (keeps chat/password separate)
+/* START GAME */
 document.getElementById("start-btn").addEventListener("click",()=>{
-    startGame();
+    document.getElementById("start-screen").style.display="none";
+    document.getElementById("jump-btn").style.display="block";
+    bgMusic.play();
+    initGame();
+});
+document.getElementById("jump-btn").addEventListener("click",()=>{jump(); soundJump.play();});
+document.addEventListener("keydown", e=>{if(e.code==="Space"){jump(); soundJump.play();}});
+document.getElementById("restart-btn").addEventListener("click",()=> location.reload());
+
+function jump(){ girl.velocity=jumpPower; }
+
+/* SHOP */
+document.querySelectorAll(".shop-item").forEach(item=>{
+    const btn=item.querySelector("button");
+    btn.addEventListener("click",()=>{
+        const cost=parseInt(item.dataset.cost);
+        if(score>=cost){ 
+            girl.color=item.dataset.color; 
+            girl.flash=true; girl.flashTimer=0;
+            score-=cost; 
+            soundBuy.play();
+        } else alert("Không đủ điểm!");
+    });
 });
 
-function startGame(){
-    const startScreen=document.getElementById("start-screen");
-    startScreen.innerHTML="<h2>Chuẩn bị...</h2><p id='countdown'>3</p>";
-    let count=3;
-    const countdownElem=document.getElementById("countdown");
-    const interval=setInterval(()=>{
-        count--;
-        if(count>0) countdownElem.innerText=count;
-        else{
-            clearInterval(interval);
-            startScreen.style.display="none";
-            document.getElementById("jump-btn").style.display="block";
-            initGame();
+/* INIT GAME */
+function initGame(){ girl.y=250; girl.velocity=0; pipes=[]; score=0; running=true; spawnTimer=0; spawnPipe(); requestAnimationFrame(gameLoop); }
+
+/* GAME LOOP */
+function gameLoop(){
+    if(!running) return;
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+
+    girl.velocity+=gravity;
+    girl.y+=girl.velocity;
+    girl.angle=Math.max(Math.min(girl.velocity*5,25),-25);
+
+    if(girl.flash){
+        girl.flashTimer +=16.6;
+        ctx.fillStyle=(Math.floor(girl.flashTimer/100)%2===0)?"white":girl.color;
+        if(girl.flashTimer>1000) girl.flash=false;
+    } else ctx.fillStyle=girl.color;
+
+    ctx.save();
+    ctx.translate(girl.x+girl.radius, girl.y+girl.radius);
+    ctx.rotate(girl.angle*Math.PI/180);
+    ctx.beginPath();
+    ctx.arc(0,0,girl.radius,0,Math.PI*2);
+    ctx.fill();
+    ctx.closePath();
+    ctx.restore();
+
+    pipeSpeed+=0.0006;
+    spawnTimer+=16.6;
+    if(spawnTimer>=1600){ spawnPipe(); spawnTimer=0; }
+
+    for(let i=pipes.length-1;i>=0;i--){
+        const pipe=pipes[i];
+        pipe.x-=pipeSpeed;
+        const topOsc=Math.sin(Date.now()/500 + pipe.offset)*5;
+        const bottomOsc=Math.sin(Date.now()/500 + pipe.offset+1)*5;
+
+        ctx.fillStyle="green";
+        ctx.fillRect(pipe.x,0,pipeWidth,pipe.topHeight+topOsc);
+        ctx.fillRect(pipe.x,canvas.height-pipe.bottomHeight+bottomOsc,pipeWidth,pipe.bottomHeight);
+
+        const nameDiv=document.getElementById("name-"+pipe.id);
+        if(nameDiv){ 
+            nameDiv.style.left=(pipe.x+pipeWidth/2-nameDiv.offsetWidth/2)+"px";
+            nameDiv.style.top=(canvas.height-pipe.bottomHeight-30+bottomOsc)+"px";
         }
-    },1000);
+
+        if(girl.x+girl.radius>pipe.x && girl.x<pipe.x+pipeWidth &&
+           (girl.y<pipe.topHeight+topOsc || girl.y+girl.radius*2>canvas.height-pipe.bottomHeight+bottomOsc)){
+            soundHit.play();
+            gameOver();
+        }
+
+        if(pipe.x+pipeWidth<0){ 
+            if(nameDiv) nameDiv.remove(); 
+            pipes.splice(i,1); 
+            score++; 
+            soundPoint.play();
+        }
+    }
+
+    if(girl.y+girl.radius*2>=canvas.height){ soundHit.play(); gameOver();}
+
+    ctx.fillStyle="white"; ctx.font="26px Arial";
+    ctx.fillText("Điểm: "+score,10,30);
+
+    requestAnimationFrame(gameLoop);
 }
 
-function safePlayAudio(el){
-    try{ if(el && typeof el.play==="function"){ el.currentTime=0; el.play().catch(()=>{}); } } catch(e){}
-}
-
-function initGame(){
-    ctx=canvas.getContext("2d");
-    bird={x:canvas.width/4, y:canvas.height/2, vy:0, radius:16};
-    pipes=[]; score=0; running=true; lastTime=performance.now(); lastPipeTime=lastTime;
-    nameIndex=0; colorIndex=0; shieldActive=false; shieldTimer=0; speed=3; shieldIcon=null;
-
-    // controls
-    window.onkeydown = e => { if(e.code==="Space" || e.key===" "){ bird.vy = -7; safePlayAudio(document.getElementById("flap-sound")); } }
-    const jumpBtn = document.getElementById("jump-btn");
-    jumpBtn.style.display="block";
-    jumpBtn.onclick = () => { if(running){ bird.vy = -7; safePlayAudio(document.getElementById("flap-sound")); } }
-    jumpBtn.addEventListener("touchstart", (e)=>{ e.preventDefault(); if(running){ bird.vy = -7; safePlayAudio(document.getElementById("flap-sound")); } });
-
-    anim = requestAnimationFrame(loop);
-}
-
+/* GAME OVER */
 function gameOver(){
     running=false;
-    cancelAnimationFrame(anim);
-    document.getElementById("jump-btn").style.display="none";
-    safePlayAudio(document.getElementById("hit-sound"));
-    const over=document.getElementById("game-over");
-    over.style.display="flex";
+    pipes.forEach(p=>{
+        const t=document.getElementById("name-"+p.id);
+        if(t) t.remove();
+    });
     document.getElementById("final-score").innerText="Điểm của bạn: "+score;
-    if(score>bestScore){ bestScore=score; localStorage.setItem("bestScore",bestScore); }
-    document.getElementById("best-score").innerText="Điểm cao nhất: "+bestScore;
-}
-
-document.getElementById("restart-btn").addEventListener("click",()=>{
-    document.getElementById("game-over").style.display="none";
-    startGame();
-});
-
-function drawBackground(){ if(bg.complete) ctx.drawImage(bg,0,0,canvas.width,canvas.height); else { ctx.fillStyle="#87CEEB"; ctx.fillRect(0,0,canvas.width,canvas.height); } }
-
-function drawPipe(p){
-    const w = p.width;
-    const topH = p.top;
-    const gap = p.gap;
-    // draw top spike (triangle)
-    ctx.fillStyle = p.color;
-    ctx.beginPath();
-    ctx.moveTo(p.x,0);
-    ctx.lineTo(p.x + w/2, topH);
-    ctx.lineTo(p.x + w, 0);
-    ctx.closePath();
-    ctx.fill();
-    // draw bottom spike
-    ctx.beginPath();
-    ctx.moveTo(p.x, canvas.height);
-    ctx.lineTo(p.x + w/2, canvas.height - (topH + gap));
-    ctx.lineTo(p.x + w, canvas.height);
-    ctx.closePath();
-    ctx.fill();
-    // name near pipe
-    ctx.fillStyle = "white"; ctx.font="16px Arial";
-    const nm = p.name;
-    ctx.fillText(nm, p.x + 4, Math.min(canvas.height-10, topH + gap + 18)); // place near bottom spike
-}
-
-function spawnShield(){
-    // spawn somewhere mid-screen horizontally, random vertical position
-    const x = Math.random() * (canvas.width - 200) + 100;
-    const y = Math.random() * (canvas.height * 0.6) + canvas.height*0.15;
-    shieldIcon = {x:x, y:y, size:36, createdAt:performance.now()};
-}
-
-function loop(t){
-    if(!running) return;
-    const dt = t - lastTime;
-    lastTime = t;
-
-    // spawn pipes periodically
-    if(t - lastPipeTime > 1500){
-        lastPipeTime = t;
-        const gap = 150; // gap size
-        const minTop = 60;
-        const maxTop = canvas.height - gap - 120;
-        const top = Math.floor(Math.random() * (maxTop - minTop) + minTop);
-        const w = 70;
-        pipes.push({x:canvas.width, top:top, gap:gap, width:w, name:names[nameIndex], color:rainbowColors[colorIndex], passed:false});
-        nameIndex = (nameIndex+1) % names.length;
-        colorIndex = (colorIndex+1) % rainbowColors.length;
-    }
-
-    // occasionally spawn shield if none
-    if(!shieldIcon && Math.random() < 0.003) spawnShield();
-
-    // physics
-    bird.vy += 0.35 * (dt/16.67); // scale gravity by dt
-    bird.y += bird.vy * (dt/16.67);
-
-    // clamp bird inside screen
-    if(bird.y > canvas.height - bird.radius){ bird.y = canvas.height - bird.radius; bird.vy = 0; }
-    if(bird.y < bird.radius){ bird.y = bird.radius; bird.vy = 0; }
-
-    // move pipes
-    for(let p of pipes) p.x -= speed * (dt/16.67);
-    // remove offscreen
-    pipes = pipes.filter(p => p.x + p.width > -50);
-
-    // draw
-    drawBackground();
-
-    // draw girl/bird
-    if(girlImg.complete){
-        ctx.drawImage(girlImg, bird.x - bird.radius, bird.y - bird.radius, bird.radius*2, bird.radius*2);
-    } else {
-        ctx.fillStyle="pink";
-        ctx.beginPath(); ctx.arc(bird.x, bird.y, bird.radius, 0, Math.PI*2); ctx.fill();
-    }
-
-    // draw and collision check pipes
-    for(let p of pipes){
-        drawPipe(p);
-
-        const inX = bird.x + bird.radius > p.x && bird.x - bird.radius < p.x + p.width;
-        if(inX){
-            // if bird is not within the safe gap then collision
-            if(!(bird.y > p.top && bird.y < p.top + p.gap)){
-                if(!shieldActive){
-                    gameOver();
-                    return;
-                } else {
-                    // if shield active, ignore collision but maybe break shield
-                    shieldActive = false;
-                    shieldTimer = 0;
-                }
-            }
-        }
-
-        if(!p.passed && (p.x + p.width) < bird.x - bird.radius){
-            p.passed = true;
-            score++;
-            safePlayAudio(document.getElementById("point-sound"));
-            // gradually increase difficulty
-            if(score % 5 === 0) speed += 0.5;
-        }
-    }
-
-    // draw shield icon if exists
-    if(shieldIcon){
-        // simple emoji draw
-        ctx.font = "28px Arial";
-        ctx.fillText("🛡️", shieldIcon.x, shieldIcon.y);
-        ctx.fillStyle="white"; ctx.font="14px Arial";
-        ctx.fillText("Khôi DZ", shieldIcon.x - 20, shieldIcon.y + 26);
-
-        // collect?
-        const dx = Math.abs(bird.x - shieldIcon.x);
-        const dy = Math.abs(bird.y - shieldIcon.y);
-        if(dx < bird.radius + shieldIcon.size && dy < bird.radius + shieldIcon.size){
-            shieldActive = true;
-            shieldTimer = 7000; // ms
-            shieldIcon = null;
-            safePlayAudio(document.getElementById("point-sound"));
-        } else {
-            // optionally remove shield after 12s if not collected
-            if(performance.now() - shieldIcon.createdAt > 12000) shieldIcon = null;
-        }
-    }
-
-    // draw shield timer
-    if(shieldActive){
-        ctx.fillStyle="white"; ctx.font="18px Arial";
-        ctx.fillText("Shield: "+Math.ceil(shieldTimer/1000)+"s", 10, 30);
-        shieldTimer -= dt;
-        if(shieldTimer <= 0) shieldActive = false;
-    }
-
-    // draw score
-    ctx.fillStyle="black"; ctx.font="20px Arial";
-    ctx.fillText("Score: "+score, canvas.width - 140, 30);
-
-    anim = requestAnimationFrame(loop);
+    document.getElementById("game-over-screen").style.display="flex";
+    document.getElementById("jump-btn").style.display="none";
+    bgMusic.pause();
 }
 </script>
 </body>
     </html>
-    
