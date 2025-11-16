@@ -1,18 +1,9 @@
 <!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <title>Trang Web của Bạn</title>
-</head>
-<body>
-    <h1>Lô! Đây là địa bàn của khôi vip nhất vũ trụ .</h1>
-</body>
-</html>
-<!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>Chat Web - nknvn</title>
+    <title>Web Chat + Game của Khôi VIP</title>
+
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -65,14 +56,29 @@
         button:hover {
             background: #0056c1;
         }
+
+        /* Khung game */
+        #game-container {
+            display:none;
+            position:fixed;
+            inset:0;
+            background:#87CEEB;
+            z-index:99999;
+            align-items:center;
+            justify-content:center;
+            flex-direction:column;
+        }
     </style>
 </head>
+
 <body>
     <div class="chat-box">
-        <h3>Chat với Web</h3>
+        <h3>Lô! Đây là địa bàn của Khôi VIP nhất vũ trụ</h3>
+
         <div id="messages"></div>
+
         <div style="display:flex;">
-            <input type="text" id="inputMsg" placeholder="đưa mồm phím vào ...">
+            <input type="text" id="inputMsg" placeholder="gõ gì đó vào đây...">
             <button onclick="sendMsg()">Gửi</button>
         </div>
     </div>
@@ -82,7 +88,6 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 
     <script>
-        // Cấu hình Firebase của bạn
         const firebaseConfig = {
             apiKey: "AIzaSyAn2gmACHihHvS18nZ27N8Ze5UZ_n7DuiY",
             authDomain: "nknvn-977c5.firebaseapp.com",
@@ -100,16 +105,20 @@
         const msgBox = document.getElementById("messages");
         const input = document.getElementById("inputMsg");
 
+        /* Auto Reply */
         function autoReply(text) {
             text = text.toLowerCase();
+
             if (text.includes("hello") || text.includes("xin chào")) return "Chào bạn!";
             if (text.includes("tên")) return "Tôi là web chat của bạn!";
             if (text.includes("mày tuổi gì")) return "mày thì biết cái đéo gì!";
-            return "nói cái con cak gì xàm vậy, câm mồm đi!";
-        }
             if (text.includes("tiến dz")) return "cái thằng khùng ảo tưởng ấy à, có gì nói luôn !";
             if (text.includes("ah khôi dz")) return "vị chúa này....QUÁ ĐỈNH RỒI !!!!!!";
-        
+
+            return "nói cái con cak gì xàm vậy, câm mồm đi!";
+        }
+
+        /* Gửi tin nhắn */
         function sendMsg() {
             const text = input.value.trim();
             if (text === "") return;
@@ -121,6 +130,9 @@
             };
             db.ref("chat").push(userMsg);
 
+            /* 🔥 GỌI KÍCH HOẠT GAME */
+            onUserSendMessage(text);
+
             const botMsg = {
                 name: "nkncon",
                 msg: autoReply(text),
@@ -131,6 +143,7 @@
             input.value = "";
         }
 
+        /* Khi có tin nhắn mới */
         db.ref("chat").on("child_added", snap => {
             const data = snap.val();
             const div = document.createElement("div");
@@ -139,122 +152,114 @@
             div.innerText = data.name + ": " + data.msg;
             msgBox.appendChild(div);
 
-            // Tự cuộn mượt
             msgBox.scrollTo({ top: msgBox.scrollHeight, behavior: 'smooth' });
 
-            // Giới hạn 50 tin nhắn
             if (msgBox.children.length > 50) {
                 msgBox.removeChild(msgBox.children[0]);
             }
         });
-    </script>
-<!-- GAME TRIGGER -->
-<div id="game-container" style="
-    display:none; position:fixed; inset:0; 
-    background:#87CEEB; z-index:99999;
-    align-items:center; justify-content:center; flex-direction:column;">
-    <canvas id="game" width="720" height="480" style="background:#87CEEB; border-radius:12px;"></canvas>
-    <button onclick="closeGame()" style="
-        margin-top:12px; padding:10px 20px; border:none; border-radius:10px;
-        cursor:pointer; font-size:16px;">Thoát</button>
-</div>
 
-<script>
-/* ---- PHRASE TRIGGER ---- */
-const GAME_PASSWORD = "vào game của anh khôi đẹp zai";
+        /* ====================================================
+            TRIGGER CÂU LỆNH MỞ GAME
+        ===================================================== */
+        const GAME_PASSWORD = "vào game của anh khôi đẹp zai";
 
-/* Hàm bạn gọi khi chat gửi tin nhắn */
-function onUserSendMessage(text) {
-    if (text.trim().toLowerCase() === GAME_PASSWORD.toLowerCase()) {
-        openGame();
-    }
-}
-
-/* ---- GAME ---- */
-let ctx, bird, pipes, score, running, anim;
-
-function openGame(){
-    document.getElementById("game-container").style.display = "flex";
-    startGame();
-}
-
-function closeGame(){
-    running = false;
-    cancelAnimationFrame(anim);
-    document.getElementById("game-container").style.display = "none";
-}
-
-/* Mini Flappy Game */
-function startGame(){
-    const canvas = document.getElementById("game");
-    ctx = canvas.getContext("2d");
-
-    bird = { x:120, y:200, vy:0 };
-    pipes = [];
-    score = 0;
-    running = true;
-    last = performance.now();
-    lastPipe = last;
-
-    window.onkeydown = e => { if(e.code==="Space") bird.vy = -7; };
-
-    anim = requestAnimationFrame(loop);
-}
-
-let lastPipe = 0, last = 0;
-
-function loop(t){
-    if(!running) return;
-    const dt = t - last;
-    last = t;
-
-    bird.vy += 0.35;
-    bird.y += bird.vy;
-
-    if(t - lastPipe > 1500){
-        lastPipe = t;
-        let top = Math.random() * 200 + 40;
-        let gap = 130;
-        pipes.push({ x:720, top:top, gap:gap, passed:false });
-    }
-
-    pipes.forEach(p => p.x -= 2);
-
-    pipes = pipes.filter(p => p.x > -60);
-
-    // collision
-    for(let p of pipes){
-        if(bird.x > p.x && bird.x < p.x+60){
-            if(bird.y < p.top || bird.y > p.top + p.gap){
-                closeGame();
-                alert("Game over! Điểm: "+score);
-                return;
+        function onUserSendMessage(text) {
+            if (text.trim().toLowerCase() === GAME_PASSWORD.toLowerCase()) {
+                openGame();
             }
         }
-        if(!p.passed && p.x+60 < bird.x){
-            p.passed = true;
-            score++;
+    </script>
+
+    <!-- ================= GAME FLAPPY ================= -->
+    <div id="game-container">
+        <canvas id="game" width="720" height="480" style="background:#87CEEB; border-radius:12px;"></canvas>
+
+        <button onclick="closeGame()" style="
+            margin-top:12px; padding:10px 20px; border:none; border-radius:10px;
+            cursor:pointer; font-size:16px;">Thoát
+        </button>
+    </div>
+
+    <script>
+        let ctx, bird, pipes, score, running, anim;
+        let lastPipe = 0, last = 0;
+
+        function openGame(){
+            document.getElementById("game-container").style.display = "flex";
+            startGame();
         }
-    }
 
-    ctx.clearRect(0,0,720,480);
+        function closeGame(){
+            running = false;
+            cancelAnimationFrame(anim);
+            document.getElementById("game-container").style.display = "none";
+        }
 
-    // draw pipes
-    ctx.fillStyle = "#2ecc71";
-    pipes.forEach(p => {
-        ctx.fillRect(p.x, 0, 60, p.top);
-        ctx.fillRect(p.x, p.top+p.gap, 60, 480 - (p.top+p.gap));
-    });
+        function startGame(){
+            const canvas = document.getElementById("game");
+            ctx = canvas.getContext("2d");
 
-    // draw bird
-    ctx.fillStyle = "#f1c40f";
-    ctx.beginPath();
-    ctx.arc(bird.x, bird.y, 14, 0, Math.PI*2);
-    ctx.fill();
+            bird = { x:120, y:200, vy:0 };
+            pipes = [];
+            score = 0;
+            running = true;
+            last = performance.now();
+            lastPipe = last;
 
-    anim = requestAnimationFrame(loop);
-}
-</script>
+            window.onkeydown = e => { if(e.code==="Space") bird.vy = -7; };
+
+            anim = requestAnimationFrame(loop);
+        }
+
+        function loop(t){
+            if(!running) return;
+            const dt = t - last;
+            last = t;
+
+            bird.vy += 0.35;
+            bird.y += bird.vy;
+
+            if(t - lastPipe > 1500){
+                lastPipe = t;
+                let top = Math.random() * 200 + 40;
+                let gap = 130;
+                pipes.push({ x:720, top:top, gap:gap, passed:false });
+            }
+
+            pipes.forEach(p => p.x -= 2);
+            pipes = pipes.filter(p => p.x > -60);
+
+            for(let p of pipes){
+                if(bird.x > p.x && bird.x < p.x+60){
+                    if(bird.y < p.top || bird.y > p.top + p.gap){
+                        closeGame();
+                        alert("Game over! Điểm: "+score);
+                        return;
+                    }
+                }
+                if(!p.passed && p.x+60 < bird.x){
+                    p.passed = true;
+                    score++;
+                }
+            }
+
+            ctx.clearRect(0,0,720,480);
+
+            ctx.fillStyle = "#2ecc71";
+            pipes.forEach(p => {
+                ctx.fillRect(p.x, 0, 60, p.top);
+                ctx.fillRect(p.x, p.top+p.gap, 60, 480 - (p.top+p.gap));
+            });
+
+            ctx.fillStyle = "#f1c40f";
+            ctx.beginPath();
+            ctx.arc(bird.x, bird.y, 14, 0, Math.PI*2);
+            ctx.fill();
+
+            anim = requestAnimationFrame(loop);
+        }
+    </script>
 
 </body>
 </html>
