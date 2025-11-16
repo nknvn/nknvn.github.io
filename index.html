@@ -4,228 +4,134 @@
 <meta charset="UTF-8">
 <title>Web Chat + Game Bảo Vệ Cô Gái</title>
 <style>
-html, body {
-    margin:0;
-    padding:0;
-    height:100%;
-    width:100%;
-    overflow:hidden;
-    font-family: Arial, sans-serif;
-}
-.chat-box {
-    position: fixed;
-    top: 10px;
-    left: 10px;
-    width: 320px;
-    max-height: 90%;
-    background:white;
-    padding:20px;
-    border-radius:12px;
-    box-shadow:0 0 10px rgba(0,0,0,0.3);
-    display:flex;
-    flex-direction:column;
-    z-index:1000;
-}
-#messages {
-    flex:1;
-    overflow-y:auto;
-    border:1px solid #ddd;
-    padding:10px;
-    border-radius:8px;
-    margin-bottom:10px;
-    background:#fafafa;
-}
-.msg {padding:6px; margin:5px 0; border-radius:6px; word-wrap: break-word;}
-input {width:75%; padding:8px; margin-right:5px;}
-button {width:20%; padding:9px; background:#007bff; color:white; border:none; border-radius:6px; cursor:pointer;}
-button:hover {background:#0056c1;}
-
-/* Game container */
-#game-container {
-    position:fixed;
-    top:0;
-    left:0;
-    width:100%;
-    height:100%;
-    display:none;
-    flex-direction:column;
-    align-items:center;
-    justify-content:center;
-    z-index:999;
-}
-#start-screen {
-    position:absolute;
-    top:50%;
-    left:50%;
-    transform:translate(-50%,-50%);
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-    justify-content:center;
-    background:rgba(255,255,255,0.8);
-    padding:20px;
-    border-radius:12px;
-    text-align:center;
-    z-index:1000;
-}
-#start-screen button, #game-over button {
-    padding:10px 20px;
-    font-size:18px;
-    border:none;
-    border-radius:10px;
-    cursor:pointer;
-    margin-top:10px;
-}
+html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;font-family:Arial,sans-serif;}
+.chat-box{position:fixed;top:10px;left:10px;width:320px;max-height:90%;background:white;padding:20px;border-radius:12px;box-shadow:0 0 10px rgba(0,0,0,0.3);display:flex;flex-direction:column;z-index:1000;}
+#messages{flex:1;overflow-y:auto;border:1px solid #ddd;padding:10px;border-radius:8px;margin-bottom:10px;background:#fafafa;}
+.msg{padding:6px;margin:5px 0;border-radius:6px;word-wrap:break-word;}
+input{width:75%;padding:8px;margin-right:5px;}
+button{width:20%;padding:9px;background:#007bff;color:white;border:none;border-radius:6px;cursor:pointer;}
+button:hover{background:#0056c1;}
+#game-container{position:fixed;top:0;left:0;width:100%;height:100%;display:none;flex-direction:column;align-items:center;justify-content:center;z-index:999;background:black;}
+#start-screen{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(255,255,255,0.8);padding:20px;border-radius:12px;text-align:center;z-index:1000;}
+#start-screen button{padding:10px 20px;font-size:18px;border:none;border-radius:10px;cursor:pointer;margin-top:10px;}
+/* Nút Bay responsive */
 #jump-btn {
-    position:absolute;
-    bottom:20px;
-    left:50%;
-    transform:translateX(-50%);
-    padding:15px 25px;
-    font-size:18px;
-    border:none;
-    border-radius:10px;
-    background:#f1c40f;
-    cursor:pointer;
-    z-index:1000;
-    display:none;
+    position: fixed;
+    bottom: 15%;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 20px 40px;
+    font-size: 24px;
+    border: none;
+    border-radius: 15px;
+    background: #f1c40f;
+    color: black;
+    font-weight: bold;
+    cursor: pointer;
+    z-index: 1000;
+    display: none;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    transition: transform 0.1s ease;
 }
-canvas {display:block;}
-#game-over {
-    position:absolute;
-    top:50%;
-    left:50%;
-    transform:translate(-50%,-50%);
-    display:none;
-    flex-direction:column;
-    align-items:center;
-    justify-content:center;
-    background:rgba(255,255,255,0.9);
-    padding:20px;
-    border-radius:12px;
-    text-align:center;
-    z-index:1001;
+#jump-btn:active {
+    transform: translateX(-50%) scale(0.95);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
 }
+#game-over{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);display:none;flex-direction:column;align-items:center;justify-content:center;background:rgba(0,0,0,0.8);padding:30px;border-radius:12px;text-align:center;color:white;z-index:1001;}
+#game-over button{padding:20px 40px;font-size:22px;border:none;border-radius:12px;background:#f1c40f;cursor:pointer;margin-top:20px;}
+canvas{display:block;}
 </style>
 </head>
 <body>
 
-<div class="chat-box">
-    <h3>Lô! Đây là địa bàn của anh Khôi top1 sever trái đất</h3>
-    <div id="messages"></div>
-    <div style="display:flex;">
-        <input type="text" id="chat-input" placeholder="Nhập tin nhắn...">
-        <button id="send-btn">Gửi</button>
-    </div>
+<div class="chat-box" id="chat-box">
+<h3>Lô! Đây là địa bàn của anh Khôi top1 sever trái đất</h3>
+<div id="messages"></div>
+<div style="display:flex;">
+<input type="text" id="chat-input" placeholder="Nhập tin nhắn...">
+<button id="send-btn">Gửi</button>
+</div>
 </div>
 
 <div id="game-container">
-    <div id="start-screen">
-        <h2>BẢO VỆ CÔ GÁI KHỎI NHỮNG CHIẾC GAI BIẾN THÁI</h2>
-        <p>Nhấn Start để bắt đầu</p>
-        <button onclick="startGame()">Start</button>
-    </div>
-    <canvas id="game"></canvas>
+<div id="start-screen">
+<h2>BẢO VỆ CÔ GÁI KHỎI NHỮNG CHIẾC GAI BIẾN THÁI</h2>
+<p>Nhấn Start để bắt đầu</p>
+<button onclick="startGame()">Start</button>
 </div>
-
-<div id="game-over">
-    <h2>Game Over!</h2>
-    <p id="final-score"></p>
-    <p id="best-score"></p>
-    <button onclick="restartGame()">Làm lại cuộc đời</button>
-</div>
-
+<canvas id="game"></canvas>
 <button id="jump-btn">Bay</button>
+<div id="game-over">
+<h1>Game Over!</h1>
+<p id="final-score"></p>
+<p id="best-score"></p>
+<button onclick="restartGame()">Làm lại cuộc đời</button>
+</div>
+</div>
+
+<audio id="flap-sound" src="flap.mp3"></audio>
+<audio id="hit-sound" src="hit.mp3"></audio>
+<audio id="point-sound" src="point.mp3"></audio>
 
 <script>
-// ================= Chat ===================
-function addMessage(text, sender="user"){
-    const msgDiv = document.createElement("div");
-    msgDiv.className = "msg";
-    msgDiv.style.background = sender==="user" ? "#d1e7dd" : "#f8d7da";
-    msgDiv.innerText = text;
-    document.getElementById("messages").appendChild(msgDiv);
-    document.getElementById("messages").scrollTop = document.getElementById("messages").scrollHeight;
+// ===== Chat + mật khẩu =====
+const GAME_PASSWORD="đã được anh khôi cho phép";
+function addMessage(text,sender="user"){
+    const msg=document.createElement("div");
+    msg.className="msg";
+    msg.style.background=sender==="WHO"?"#d1e7dd":"#f8d7da";
+    msg.innerText=text;
+    document.getElementById("messages").appendChild(msg);
+    document.getElementById("messages").scrollTop=document.getElementById("messages").scrollHeight;
 }
-
 function botReply(text){
-    text = text.trim().toLowerCase();
-    let reply = "Mình chưa hiểu bạn nói gì 😅";
-    if(text.includes("xin chào") || text.includes("hello")){
-        reply = "Chào bạn! 👋";
-    } else if(text.includes("tên bạn")){
-        reply = "Mình là Khôi Bot 😎";
-    } else if(text.includes("game")){
-        reply = "Nhập mật khẩu 'đã được anh khôi cho phép' là mở được game nha!";
-    } else if(text.includes("bye") || text.includes("tạm biệt")){
-        reply = "Tạm biệt! Hẹn gặp lại! 👋";
-    }
-    addMessage(reply, "bot");
+    text=text.trim().toLowerCase();
+    let reply="IM MỒM NGAY !";
+    if(text.includes("hi")||text.includes("hey")) reply="sao? 👋";
+    else if(text.includes("thích gì")) reply="đếck quan tâm";
+    else if(text.includes("game")) reply="HỎI ANH KHÔI DZ!";
+    addMessage(reply,"đệ anh Khôi");
 }
-
-document.getElementById("send-btn").addEventListener("click", ()=>{
-    const input = document.getElementById("chat-input");
-    const text = input.value;
+document.getElementById("send-btn").addEventListener("click",()=>{
+    const input=document.getElementById("chat-input");
+    const text=input.value;
     if(text.trim()==="") return;
-    addMessage(text, "user");
+    addMessage(text,"user");
     input.value="";
     botReply(text);
-    // Mở game nếu nhập đúng mật khẩu
-    const GAME_PASSWORD = "đã được anh khôi cho phép";
-    if(text.trim().toLowerCase() === GAME_PASSWORD){
+    if(text.trim().toLowerCase()===GAME_PASSWORD.toLowerCase()){
+        document.getElementById("chat-box").style.display="none";
         openGame();
     }
 });
+document.getElementById("chat-input").addEventListener("keydown",e=>{if(e.key==="Enter") document.getElementById("send-btn").click();});
 
-document.getElementById("chat-input").addEventListener("keydown", (e)=>{
-    if(e.key === "Enter") document.getElementById("send-btn").click();
-});
-
-// ================= Game ===================
-let canvas=document.getElementById("game");
-let ctx;
-let bird, pipes, score, running, anim, shieldActive=false, shieldTimer=0;
-let lastPipe=0, last=0;
-let speed = 3;
+// ===== Game =====
+let canvas=document.getElementById("game"),ctx;
+let bird,pipes,score,running,anim,shieldActive=false,shieldTimer=0,speed=3;
+let lastPipe=0,last=0;
 const names=["Hùng","Hoàng","Việt","Tiến","Tín","Khoa","Sáng","Hậu","Duy","Phúc","Điền","Trung","Huy","Thắng","Quyền","Nguyên"];
 const rainbowColors=["red","orange","yellow","green","blue","indigo","violet"];
-let nameIndex=0;
-let colorIndex=0;
-let shieldIcon=null;
+let nameIndex=0,colorIndex=0,shieldIcon=null;
+let bestScore=parseInt(localStorage.getItem("bestScore")||0);
 
-// Lưu điểm cao nhất
-let bestScore = parseInt(localStorage.getItem('bestScore') || 0);
+let bg=new Image(); bg.src="bg.jpg";
+let girlImg=new Image(); girlImg.src="girl.png"; 
 
-// Resize canvas
-function resizeCanvas(){
-    if(window.innerWidth>window.innerHeight){
-        canvas.width=window.innerWidth;
-        canvas.height=window.innerHeight;
-    } else {
-        canvas.width=window.innerWidth;
-        canvas.height=window.innerHeight*0.8;
-    }
-}
-window.addEventListener("resize",resizeCanvas);
-resizeCanvas();
+function resizeCanvas(){ canvas.width=window.innerWidth; canvas.height=window.innerHeight; }
+window.addEventListener("resize",resizeCanvas); resizeCanvas();
 
-function openGame(){
-    document.getElementById("game-container").style.display="flex";
-    document.getElementById("start-screen").style.display="flex";
-    ctx=canvas.getContext("2d");
-}
+function openGame(){ document.getElementById("game-container").style.display="flex"; document.getElementById("start-screen").style.display="flex"; ctx=canvas.getContext("2d"); }
 
 function startGame(){
-    speed = 3; // reset tốc độ
     const startScreen=document.getElementById("start-screen");
     startScreen.innerHTML="<h2>Chuẩn bị...</h2><p id='countdown'>3</p>";
     let count=3;
     const countdownElem=document.getElementById("countdown");
     const interval=setInterval(()=>{
         count--;
-        if(count>0){
-            countdownElem.innerText=count;
-        } else {
+        if(count>0) countdownElem.innerText=count;
+        else{
             clearInterval(interval);
             startScreen.style.display="none";
             document.getElementById("jump-btn").style.display="block";
@@ -236,148 +142,102 @@ function startGame(){
 
 function initGame(){
     ctx=canvas.getContext("2d");
-    bird={x:canvas.width/4, y:canvas.height/2, vy:0};
-    pipes=[];
-    score=0;
-    running=true;
-    last=performance.now();
-    lastPipe=last;
-    nameIndex=0;
-    colorIndex=0;
-    shieldActive=false;
-    shieldTimer=0;
-    shieldIcon=null;
+    bird={x:canvas.width/4,y:canvas.height/2,vy:0};
+    pipes=[]; score=0; running=true; last=performance.now(); lastPipe=last;
+    nameIndex=0; colorIndex=0; shieldActive=false; shieldTimer=0; speed=3;
 
-    window.onkeydown=e=>{if(e.code==="Space") bird.vy=-7;}
-    document.getElementById("jump-btn").addEventListener("click",()=>{if(running) bird.vy=-7;});
+    // Nhảy với Space và nút Bay
+    window.onkeydown=e=>{if(e.code==="Space"){bird.vy=-7; document.getElementById("flap-sound").play();}}
+    const jumpBtn = document.getElementById("jump-btn");
+    jumpBtn.style.display="block";
+    jumpBtn.onclick = () => { if(running){bird.vy=-7; document.getElementById("flap-sound").play();} }
+    jumpBtn.addEventListener("touchstart",(e)=>{ e.preventDefault(); if(running){bird.vy=-7; document.getElementById("flap-sound").play();} });
 
     anim=requestAnimationFrame(loop);
 }
 
-function closeGame(){
+function gameOver(){
     running=false;
     cancelAnimationFrame(anim);
-    document.getElementById("game-container").style.display="none";
     document.getElementById("jump-btn").style.display="none";
-    showGameOver();
+    document.getElementById("hit-sound").play();
+    const over=document.getElementById("game-over");
+    over.style.display="flex";
+    document.getElementById("final-score").innerText="Điểm của bạn: "+score;
+    if(score>bestScore){ bestScore=score; localStorage.setItem("bestScore",bestScore);}
+    document.getElementById("best-score").innerText="Điểm cao nhất: "+bestScore;
 }
 
-// Game over màn hình
-function showGameOver(){
-    document.getElementById("game-over").style.display="flex";
-    document.getElementById("final-score").innerText = "Điểm của bạn: "+score;
-    if(score>bestScore){
-        bestScore = score;
-        localStorage.setItem('bestScore', bestScore);
-    }
-    document.getElementById("best-score").innerText = "Điểm cao nhất: "+bestScore;
-}
+function restartGame(){ document.getElementById("game-over").style.display="none"; startGame(); }
 
-function restartGame(){
-    document.getElementById("game-over").style.display="none";
-    startGame();
-}
+function drawBackground(){ if(bg.complete) ctx.drawImage(bg,0,0,canvas.width,canvas.height); }
 
-// Draw background
-function drawBackground(){
-    const gradient=ctx.createLinearGradient(0,0,0,canvas.height);
-    gradient.addColorStop(0,"#a8edea");
-    gradient.addColorStop(1,"#fed6e3");
-    ctx.fillStyle=gradient;
-    ctx.fillRect(0,0,canvas.width,canvas.height);
-}
-
-// Draw spikes
-function drawSpike(x, height, name, color){
-    const spikeWidth=40;
-    const spikeHeight=height;
+function drawSpike(x,height,name,color){
+    const spikeWidth=60;
     ctx.fillStyle=color;
+    // top
     ctx.beginPath();
-    ctx.moveTo(x,canvas.height);
-    ctx.lineTo(x+spikeWidth/2,canvas.height-spikeHeight);
-    ctx.lineTo(x+spikeWidth,canvas.height);
-    ctx.closePath();
-    ctx.fill();
-    ctx.fillStyle="white";
-    ctx.font="16px Arial";
-    ctx.fillText(name,x,canvas.height-spikeHeight-5);
+    ctx.moveTo(x,0); ctx.lineTo(x+spikeWidth/2,height); ctx.lineTo(x+spikeWidth,0); ctx.closePath(); ctx.fill();
+    // bottom
+    ctx.beginPath();
+    ctx.moveTo(x,canvas.height); ctx.lineTo(x+spikeWidth/2,canvas.height-height); ctx.lineTo(x+spikeWidth,canvas.height); ctx.closePath(); ctx.fill();
+    // name
+    ctx.fillStyle="white"; ctx.font="16px Arial";
+    ctx.fillText(name,x,canvas.height-5);
 }
+
+function spawnShield(){ shieldIcon={x:Math.random()*(canvas.width-50)+25,y:50,width:40,height:40}; }
 
 function loop(t){
     if(!running) return;
-    const dt=t-last;
-    last=t;
+    const dt=t-last; last=t;
     drawBackground();
 
-    // bird physics
-    bird.vy+=0.35;
-    bird.y+=bird.vy;
-    if(bird.y>canvas.height-20) {bird.y=canvas.height-20; bird.vy=0;}
-    if(bird.y<20) {bird.y=20; bird.vy=0;}
+    bird.vy+=0.35; bird.y+=bird.vy;
+    if(bird.y>canvas.height-20) bird.y=canvas.height-20,bird.vy=0;
+    if(bird.y<20) bird.y=20,bird.vy=0;
+    if(girlImg.complete) ctx.drawImage(girlImg,bird.x-16,bird.y-16,32,32);
 
-    // spawn spikes
     if(t-lastPipe>1500){
         lastPipe=t;
-        let name=names[nameIndex];
-        let color=rainbowColors[colorIndex];
-        pipes.push({x:canvas.width, name:name, color:color});
+        let minH=60,maxH=canvas.height-200;
+        let h=Math.floor(Math.random()*(maxH-minH)+minH);
+        pipes.push({x:canvas.width,y:h,name:names[nameIndex],color:rainbowColors[colorIndex],passed:false});
         nameIndex=(nameIndex+1)%names.length;
         colorIndex=(colorIndex+1)%rainbowColors.length;
     }
 
-    // move spikes
     pipes.forEach(p=>p.x-=speed);
-    pipes=pipes.filter(p=>p.x>-50);
+    pipes=pipes.filter(p=>p.x>-70);
 
-    // draw spikes + collision
     pipes.forEach(p=>{
         drawSpike(p.x,150,p.name,p.color);
-        if(bird.x+15>p.x && bird.x-15<p.x+40){
-            if(bird.y>canvas.height-150){
-                if(!shieldActive){
-                    closeGame();
-                    return;
-                }
-            }
+        if(bird.x+16>p.x && bird.x-16<p.x+60){
+            if(bird.y>canvas.height-150 || bird.y<150){gameOver(); return;}
         }
-        if(!p.passed && p.x+40<bird.x){p.passed=true; score++;}
+        if(!p.passed && p.x+60<bird.x){ p.passed=true; score++; document.getElementById("point-sound").play();}
     });
 
-    // draw bird
-    ctx.font="32px Arial";
-    ctx.fillText("👧",bird.x-16,bird.y+16);
-
-    // shield
     if(shieldIcon){
-        ctx.font="32px Arial";
+        ctx.fillStyle="blue"; ctx.font="28px Arial";
         ctx.fillText("🕴️",shieldIcon.x,shieldIcon.y);
-        ctx.font="16px Arial";
-        ctx.fillText("Khôi DZ",shieldIcon.x-10,shieldIcon.y+30);
-        if(bird.x>shieldIcon.x-10 && bird.x<shieldIcon.x+30 && bird.y>shieldIcon.y-10 && bird.y<shieldIcon.y+30){
-            shieldActive=true;
-            shieldTimer=7000;
-            shieldIcon=null;
-            speed += 1; // tăng tốc độ khi lấy lá chắn
+        ctx.fillText("Khôi DZ",shieldIcon.x-20,shieldIcon.y+30);
+        if(bird.x>shieldIcon.x-20 && bird.x<shieldIcon.x+20 && bird.y>shieldIcon.y-20 && bird.y<shieldIcon.y+20){
+            shieldActive=true; shieldTimer=7000; shieldIcon=null; speed+=1;
         }
     }
 
-    // draw shield timer
     if(shieldActive){
-        ctx.fillStyle="white";
-        ctx.font="18px Arial";
+        ctx.fillStyle="white"; ctx.font="18px Arial";
         ctx.fillText("Shield: "+Math.ceil(shieldTimer/1000)+"s",10,30);
-        shieldTimer-=dt;
-        if(shieldTimer<=0){shieldActive=false; shieldTimer=0;}
+        shieldTimer-=dt; if(shieldTimer<=0) shieldActive=false;
     }
 
-    // draw score
-    ctx.fillStyle="black";
-    ctx.font="20px Arial";
+    ctx.fillStyle="black"; ctx.font="20px Arial";
     ctx.fillText("Score: "+score,canvas.width-120,30);
 
     anim=requestAnimationFrame(loop);
 }
 </script>
-
 </body>
 </html>
