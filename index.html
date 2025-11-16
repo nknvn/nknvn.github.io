@@ -72,7 +72,7 @@
         <h3>Chat với Web</h3>
         <div id="messages"></div>
         <div style="display:flex;">
-            <input type="text" id="inputMsg" placeholder="Nhập tin nhắn...">
+            <input type="text" id="inputMsg" placeholder="đưa mồm phím vào ...">
             <button onclick="sendMsg()">Gửi</button>
         </div>
     </div>
@@ -104,8 +104,8 @@
             text = text.toLowerCase();
             if (text.includes("hello") || text.includes("xin chào")) return "Chào bạn!";
             if (text.includes("tên")) return "Tôi là web chat của bạn!";
-            if (text.includes("bao nhiêu tuổi")) return "Web không có tuổi!";
-            return "Tôi chưa hiểu, bạn nói lại được không?";
+            if (text.includes("mày tuổi gì")) return "mày thì biết cái đéo gì!";
+            return "nói cái con cak gì xàm vậy, câm mồm đi!";
         }
 
         function sendMsg() {
@@ -113,14 +113,14 @@
             if (text === "") return;
 
             const userMsg = {
-                name: "Bạn",
+                name: "gay",
                 msg: text,
                 time: Date.now()
             };
             db.ref("chat").push(userMsg);
 
             const botMsg = {
-                name: "Web",
+                name: "nkncon",
                 msg: autoReply(text),
                 time: Date.now()
             };
@@ -133,7 +133,7 @@
             const data = snap.val();
             const div = document.createElement("div");
             div.className = "msg";
-            div.style.background = data.name === "Web" ? "#d1ffd4" : "#e2e2ff";
+            div.style.background = data.name === "nkncon" ? "#d1ffd4" : "#e2e2ff";
             div.innerText = data.name + ": " + data.msg;
             msgBox.appendChild(div);
 
