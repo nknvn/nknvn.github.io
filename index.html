@@ -148,5 +148,113 @@
             }
         });
     </script>
+<!-- GAME TRIGGER -->
+<div id="game-container" style="
+    display:none; position:fixed; inset:0; 
+    background:#87CEEB; z-index:99999;
+    align-items:center; justify-content:center; flex-direction:column;">
+    <canvas id="game" width="720" height="480" style="background:#87CEEB; border-radius:12px;"></canvas>
+    <button onclick="closeGame()" style="
+        margin-top:12px; padding:10px 20px; border:none; border-radius:10px;
+        cursor:pointer; font-size:16px;">Thoát</button>
+</div>
+
+<script>
+/* ---- PHRASE TRIGGER ---- */
+const GAME_PASSWORD = "vào game của anh khôi đẹp zai";
+
+/* Hàm bạn gọi khi chat gửi tin nhắn */
+function onUserSendMessage(text) {
+    if (text.trim().toLowerCase() === GAME_PASSWORD.toLowerCase()) {
+        openGame();
+    }
+}
+
+/* ---- GAME ---- */
+let ctx, bird, pipes, score, running, anim;
+
+function openGame(){
+    document.getElementById("game-container").style.display = "flex";
+    startGame();
+}
+
+function closeGame(){
+    running = false;
+    cancelAnimationFrame(anim);
+    document.getElementById("game-container").style.display = "none";
+}
+
+/* Mini Flappy Game */
+function startGame(){
+    const canvas = document.getElementById("game");
+    ctx = canvas.getContext("2d");
+
+    bird = { x:120, y:200, vy:0 };
+    pipes = [];
+    score = 0;
+    running = true;
+    last = performance.now();
+    lastPipe = last;
+
+    window.onkeydown = e => { if(e.code==="Space") bird.vy = -7; };
+
+    anim = requestAnimationFrame(loop);
+}
+
+let lastPipe = 0, last = 0;
+
+function loop(t){
+    if(!running) return;
+    const dt = t - last;
+    last = t;
+
+    bird.vy += 0.35;
+    bird.y += bird.vy;
+
+    if(t - lastPipe > 1500){
+        lastPipe = t;
+        let top = Math.random() * 200 + 40;
+        let gap = 130;
+        pipes.push({ x:720, top:top, gap:gap, passed:false });
+    }
+
+    pipes.forEach(p => p.x -= 2);
+
+    pipes = pipes.filter(p => p.x > -60);
+
+    // collision
+    for(let p of pipes){
+        if(bird.x > p.x && bird.x < p.x+60){
+            if(bird.y < p.top || bird.y > p.top + p.gap){
+                closeGame();
+                alert("Game over! Điểm: "+score);
+                return;
+            }
+        }
+        if(!p.passed && p.x+60 < bird.x){
+            p.passed = true;
+            score++;
+        }
+    }
+
+    ctx.clearRect(0,0,720,480);
+
+    // draw pipes
+    ctx.fillStyle = "#2ecc71";
+    pipes.forEach(p => {
+        ctx.fillRect(p.x, 0, 60, p.top);
+        ctx.fillRect(p.x, p.top+p.gap, 60, 480 - (p.top+p.gap));
+    });
+
+    // draw bird
+    ctx.fillStyle = "#f1c40f";
+    ctx.beginPath();
+    ctx.arc(bird.x, bird.y, 14, 0, Math.PI*2);
+    ctx.fill();
+
+    anim = requestAnimationFrame(loop);
+}
+</script>
+
 </body>
 </html>
