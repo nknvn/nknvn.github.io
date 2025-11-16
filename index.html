@@ -1,265 +1,311 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-    <meta charset="UTF-8">
-    <title>Web Chat + Game của Khôi VIP</title>
+<meta charset="UTF-8">
+<title>Web Chat + Game Bảo Vệ Cô Gái</title>
+<style>
+html, body {
+    margin:0;
+    padding:0;
+    height:100%;
+    width:100%;
+    overflow:hidden;
+    font-family: Arial, sans-serif;
+}
+.chat-box {
+    position: fixed;
+    top: 10px;
+    left: 10px;
+    width: 320px;
+    max-height: 90%;
+    background:white;
+    padding:20px;
+    border-radius:12px;
+    box-shadow:0 0 10px rgba(0,0,0,0.3);
+    display:flex;
+    flex-direction:column;
+    z-index:1000;
+}
+#messages {
+    flex:1;
+    overflow-y:auto;
+    border:1px solid #ddd;
+    padding:10px;
+    border-radius:8px;
+    margin-bottom:10px;
+    background:#fafafa;
+}
+.msg {padding:6px; margin:5px 0; border-radius:6px; word-wrap: break-word;}
+input {width:75%; padding:8px; margin-right:5px;}
+button {width:20%; padding:9px; background:#007bff; color:white; border:none; border-radius:6px; cursor:pointer;}
+button:hover {background:#0056c1;}
 
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background: #f0f0f0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-        }
-        .chat-box {
-            width: 350px;
-            background: white;
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.2);
-            display: flex;
-            flex-direction: column;
-        }
-        #messages {
-            flex: 1;
-            height: 300px;
-            overflow-y: auto;
-            border: 1px solid #ddd;
-            padding: 10px;
-            border-radius: 8px;
-            margin-bottom: 10px;
-            background: #fafafa;
-        }
-        .msg {
-            padding: 6px;
-            margin: 5px 0;
-            border-radius: 6px;
-            word-wrap: break-word;
-        }
-        input {
-            width: 75%;
-            padding: 8px;
-            margin-right: 5px;
-        }
-        button {
-            width: 20%;
-            padding: 9px;
-            background: #007bff;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-        }
-        button:hover {
-            background: #0056c1;
-        }
-
-        /* Khung game */
-        #game-container {
-            display:none;
-            position:fixed;
-            inset:0;
-            background:#87CEEB;
-            z-index:99999;
-            align-items:center;
-            justify-content:center;
-            flex-direction:column;
-        }
-    </style>
+/* Game container */
+#game-container {
+    position:fixed;
+    top:0;
+    left:0;
+    width:100%;
+    height:100%;
+    display:none;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    z-index:999;
+}
+#start-screen {
+    position:absolute;
+    top:50%;
+    left:50%;
+    transform:translate(-50%,-50%);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    background:rgba(255,255,255,0.8);
+    padding:20px;
+    border-radius:12px;
+    text-align:center;
+    z-index:1000;
+}
+#start-screen button {
+    padding:10px 20px;
+    font-size:18px;
+    border:none;
+    border-radius:10px;
+    cursor:pointer;
+    margin-top:10px;
+}
+#jump-btn {
+    position:absolute;
+    bottom:20px;
+    left:50%;
+    transform:translateX(-50%);
+    padding:15px 25px;
+    font-size:18px;
+    border:none;
+    border-radius:10px;
+    background:#f1c40f;
+    cursor:pointer;
+    z-index:1000;
+    display:none;
+}
+canvas {display:block;}
+</style>
 </head>
-
 <body>
-    <div class="chat-box">
-        <h3>Lô! Đây là địa bàn của Khôi VIP nhất vũ trụ</h3>
 
-        <div id="messages"></div>
+<div class="chat-box">
+    <h3>Lô! Đây là địa bàn của anh Khôi top1 sever trái đấtđất</h3>
+    <div id="messages"></dgame";
+function onUserSendMessage(text){
+    if(text.trim().toLowerCase()===GAME_PASSWORD.toLowerCase()){
+        openGame();
+    }
+}
+</script>
 
-        <div style="display:flex;">
-            <input type="text" id="inputMsg" placeholder="gõ gì đó vào đây...">
-            <button onclick="sendMsg()">Gửi</button>
-        </div>
+<div id="game-container">
+    <div id="start-screen">
+        <h2>BẢO VỆ CÔ GÁI KHỎI NHỮNG CHIẾC GAI BIẾN THÁI</h2>
+        <p>Nhấn Start để bắt đầu</p>
+        <button onclick="startGame()">Start</button>
     </div>
+    <canvas id="game"></canvas>
+</div>
+<button id="jump-btn">Bay</button>
 
-    <!-- Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+<script>
+let canvas=document.getElementById("game");
+let ctx;
+let bird, pipes, score, running, anim, shieldActive=false, shieldTimer=0;
+let lastPipe=0, last=0;
+const names=["Hùng","Hoàng","Việt","Tiến","Tín","Khoa","Sáng","Hậu","Duy","Phúc","Điền","Trung","Huy","Thắng","Quyền","Nguyên"];
+const rainbowColors=["red","orange","yellow","green","blue","indigo","violet"];
+let nameIndex=0;
+let colorIndex=0;
+let shieldIcon=null;
 
-    <script>
-        const firebaseConfig = {
-            apiKey: "AIzaSyAn2gmACHihHvS18nZ27N8Ze5UZ_n7DuiY",
-            authDomain: "nknvn-977c5.firebaseapp.com",
-            databaseURL: "https://nknvn-977c5-default-rtdb.firebaseio.com",
-            projectId: "nknvn-977c5",
-            storageBucket: "nknvn-977c5.firebasestorage.app",
-            messagingSenderId: "331893179436",
-            appId: "1:331893179436:web:761881d4794168c84c7d89",
-            measurementId: "G-ZP6JH05FM3"
-        };
+// Resize canvas
+function resizeCanvas(){
+    if(window.innerWidth>window.innerHeight){
+        // Landscape → PC
+        canvas.width=window.innerWidth;
+        canvas.height=window.innerHeight;
+    } else {
+        // Mobile → dọc
+        canvas.width=window.innerWidth;
+        canvas.height=window.innerHeight*0.8;
+    }
+}
+window.addEventListener("resize",resizeCanvas);
+resizeCanvas();
 
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.database();
+// Open game
+function openGame(){
+    document.getElementById("game-container").style.display="flex";
+    document.getElementById("start-screen").style.display="flex";
+    ctx=canvas.getContext("2d");
+}
 
-        const msgBox = document.getElementById("messages");
-        const input = document.getElementById("inputMsg");
-
-        /* Auto Reply */
-        function autoReply(text) {
-            text = text.toLowerCase();
-
-            if (text.includes("hello") || text.includes("xin chào")) return "Chào bạn!";
-            if (text.includes("tên")) return "Tôi là web chat của bạn!";
-            if (text.includes("mày tuổi gì")) return "mày thì biết cái đéo gì!";
-            if (text.includes("tiến dz")) return "cái thằng khùng ảo tưởng ấy à, có gì nói luôn !";
-            if (text.includes("ah khôi dz")) return "vị chúa này....QUÁ ĐỈNH RỒI !!!!!!";
-
-            return "nói cái con cak gì xàm vậy, câm mồm đi!";
+// Start game with countdown
+function startGame(){
+    const startScreen=document.getElementById("start-screen");
+    startScreen.innerHTML="<h2>Chuẩn bị...</h2><p id='countdown'>3</p>";
+    let count=3;
+    const countdownElem=document.getElementById("countdown");
+    const interval=setInterval(()=>{
+        count--;
+        if(count>0){
+            countdownElem.innerText=count;
+        } else {
+            clearInterval(interval);
+            startScreen.style.display="none";
+            document.getElementById("jump-btn").style.display="block";
+            initGame();
         }
+    },1000);
+}
 
-        /* Gửi tin nhắn */
-        function sendMsg() {
-            const text = input.value.trim();
-            if (text === "") return;
+// Initialize game
+function initGame(){
+    ctx=canvas.getContext("2d");
+    bird={x:canvas.width/4, y:canvas.height/2, vy:0};
+    pipes=[];
+    score=0;
+    running=true;
+    last=performance.now();
+    lastPipe=last;
+    nameIndex=0;
+    colorIndex=0;
+    shieldActive=false;
+    shieldTimer=0;
 
-            const userMsg = {
-                name: "gay",
-                msg: text,
-                time: Date.now()
-            };
-            db.ref("chat").push(userMsg);
+    // Controls
+    window.onkeydown=e=>{if(e.code==="Space") bird.vy=-7;}
+    document.getElementById("jump-btn").addEventListener("click",()=>{if(running) bird.vy=-7;});
 
-            /* 🔥 GỌI KÍCH HOẠT GAME */
-            onUserSendMessage(text);
+    anim=requestAnimationFrame(loop);
+}
 
-            const botMsg = {
-                name: "nkncon",
-                msg: autoReply(text),
-                time: Date.now()
-            };
-            db.ref("chat").push(botMsg);
+// Close game
+function closeGame(){
+    running=false;
+    cancelAnimationFrame(anim);
+    document.getElementById("game-container").style.display="none";
+    document.getElementById("jump-btn").style.display="none";
+}
 
-            input.value = "";
-        }
+// Draw gradient background
+function drawBackground(){
+    const gradient=ctx.createLinearGradient(0,0,0,canvas.height);
+    gradient.addColorStop(0,"#a8edea");
+    gradient.addColorStop(1,"#fed6e3");
+    ctx.fillStyle=gradient;
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+}
 
-        /* Khi có tin nhắn mới */
-        db.ref("chat").on("child_added", snap => {
-            const data = snap.val();
-            const div = document.createElement("div");
-            div.className = "msg";
-            div.style.background = data.name === "nkncon" ? "#d1ffd4" : "#e2e2ff";
-            div.innerText = data.name + ": " + data.msg;
-            msgBox.appendChild(div);
+// Draw spikes with names
+function drawSpike(x, height, name, color){
+    const spikeWidth=40;
+    const spikeHeight=height;
+    ctx.fillStyle=color;
+    ctx.beginPath();
+    ctx.moveTo(x,canvas.height);
+    ctx.lineTo(x+spikeWidth/2,canvas.height-spikeHeight);
+    ctx.lineTo(x+spikeWidth,canvas.height);
+    ctx.closePath();
+    ctx.fill();
+    // Draw name
+    ctx.fillStyle="white";
+    ctx.font="16px Arial";
+    ctx.fillText(name,x,canvas.height-spikeHeight-5);
+}
 
-            msgBox.scrollTo({ top: msgBox.scrollHeight, behavior: 'smooth' });
+// Spawn shield
+function spawnShield(){
+    shieldIcon={x:Math.random()*(canvas.width-50)+25, y:50, width:40, height:40};
+}
 
-            if (msgBox.children.length > 50) {
-                msgBox.removeChild(msgBox.children[0]);
-            }
-        });
+// Game loop
+function loop(t){
+    if(!running) return;
+    const dt=t-last;
+    last=t;
+    // Background
+    drawBackground();
+    // Bird physics
+    bird.vy+=0.35;
+    bird.y+=bird.vy;
+    if(bird.y>canvas.height-20) {bird.y=canvas.height-20; bird.vy=0;}
+    if(bird.y<20) {bird.y=20; bird.vy=0;}
 
-        /* ====================================================
-            TRIGGER CÂU LỆNH MỞ GAME
-        ===================================================== */
-        const GAME_PASSWORD = "vào game của anh khôi đẹp zai";
+    // Spawn spikes every 1500ms
+    if(t-lastPipe>1500){
+        lastPipe=t;
+        let name=names[nameIndex];
+        let color=rainbowColors[colorIndex];
+        pipes.push({x:canvas.width, name:name, color:color});
+        nameIndex=(nameIndex+1)%names.length;
+        colorIndex=(colorIndex+1)%rainbowColors.length;
+    }
 
-        function onUserSendMessage(text) {
-            if (text.trim().toLowerCase() === GAME_PASSWORD.toLowerCase()) {
-                openGame();
-            }
-        }
-    </script>
+    // Move spikes
+    pipes.forEach(p=>p.x-=3);
+    pipes=pipes.filter(p=>p.x>-50);
 
-    <!-- ================= GAME FLAPPY ================= -->
-    <div id="game-container">
-        <canvas id="game" width="720" height="480" style="background:#87CEEB; border-radius:12px;"></canvas>
-
-        <button onclick="closeGame()" style="
-            margin-top:12px; padding:10px 20px; border:none; border-radius:10px;
-            cursor:pointer; font-size:16px;">Thoát
-        </button>
-    </div>
-
-    <script>
-        let ctx, bird, pipes, score, running, anim;
-        let lastPipe = 0, last = 0;
-
-        function openGame(){
-            document.getElementById("game-container").style.display = "flex";
-            startGame();
-        }
-
-        function closeGame(){
-            running = false;
-            cancelAnimationFrame(anim);
-            document.getElementById("game-container").style.display = "none";
-        }
-
-        function startGame(){
-            const canvas = document.getElementById("game");
-            ctx = canvas.getContext("2d");
-
-            bird = { x:120, y:200, vy:0 };
-            pipes = [];
-            score = 0;
-            running = true;
-            last = performance.now();
-            lastPipe = last;
-
-            window.onkeydown = e => { if(e.code==="Space") bird.vy = -7; };
-
-            anim = requestAnimationFrame(loop);
-        }
-
-        function loop(t){
-            if(!running) return;
-            const dt = t - last;
-            last = t;
-
-            bird.vy += 0.35;
-            bird.y += bird.vy;
-
-            if(t - lastPipe > 1500){
-                lastPipe = t;
-                let top = Math.random() * 200 + 40;
-                let gap = 130;
-                pipes.push({ x:720, top:top, gap:gap, passed:false });
-            }
-
-            pipes.forEach(p => p.x -= 2);
-            pipes = pipes.filter(p => p.x > -60);
-
-            for(let p of pipes){
-                if(bird.x > p.x && bird.x < p.x+60){
-                    if(bird.y < p.top || bird.y > p.top + p.gap){
-                        closeGame();
-                        alert("Game over! Điểm: "+score);
-                        return;
-                    }
-                }
-                if(!p.passed && p.x+60 < bird.x){
-                    p.passed = true;
-                    score++;
+    // Draw spikes
+    pipes.forEach(p=>{
+        drawSpike(p.x,150,p.name,p.color);
+        // Collision
+        if(bird.x+15>p.x && bird.x-15<p.x+40){
+            if(bird.y>canvas.height-150){
+                if(!shieldActive){
+                    closeGame();
+                    alert("Game Over! Điểm: "+score);
+                    return;
                 }
             }
-
-            ctx.clearRect(0,0,720,480);
-
-            ctx.fillStyle = "#2ecc71";
-            pipes.forEach(p => {
-                ctx.fillRect(p.x, 0, 60, p.top);
-                ctx.fillRect(p.x, p.top+p.gap, 60, 480 - (p.top+p.gap));
-            });
-
-            ctx.fillStyle = "#f1c40f";
-            ctx.beginPath();
-            ctx.arc(bird.x, bird.y, 14, 0, Math.PI*2);
-            ctx.fill();
-
-            anim = requestAnimationFrame(loop);
         }
-    </script>
+        // Score
+        if(!p.passed && p.x+40<bird.x){p.passed=true; score++;}
+    });
+
+    // Draw bird
+    ctx.font="32px Arial";
+    ctx.fillText("👧",bird.x-16,bird.y+16);
+
+    // Draw shield
+    if(shieldIcon){
+        ctx.font="32px Arial";
+        ctx.fillText("🕴️",shieldIcon.x,shieldIcon.y);
+        ctx.font="16px Arial";
+        ctx.fillText("Khôi DZ",shieldIcon.x-10,shieldIcon.y+30);
+        // Check collision
+        if(bird.x>shieldIcon.x-10 && bird.x<shieldIcon.x+30 && bird.y>shieldIcon.y-10 && bird.y<shieldIcon.y+30){
+            shieldActive=true;
+            shieldTimer=7000; // 7 seconds
+            shieldIcon=null;
+        }
+    }
+
+    // Draw shield timer
+    if(shieldActive){
+        ctx.fillStyle="white";
+        ctx.font="18px Arial";
+        ctx.fillText("Shield: "+Math.ceil(shieldTimer/1000)+"s",10,30);
+        shieldTimer-=dt;
+        if(shieldTimer<=0) {shieldActive=false; shieldTimer=0;}
+    }
+
+    // Score
+    ctx.fillStyle="black";
+    ctx.font="20px Arial";
+    ctx.fillText("Score: "+score,canvas.width-120,30);
+
+    anim=requestAnimationFrame(loop);
+}
+</script>
 
 </body>
 </html>
