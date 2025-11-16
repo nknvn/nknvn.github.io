@@ -68,7 +68,7 @@ button:hover {background:#0056c1;}
     text-align:center;
     z-index:1000;
 }
-#start-screen button {
+#start-screen button, #game-over button {
     padding:10px 20px;
     font-size:18px;
     border:none;
@@ -91,19 +91,33 @@ button:hover {background:#0056c1;}
     display:none;
 }
 canvas {display:block;}
+#game-over {
+    position:absolute;
+    top:50%;
+    left:50%;
+    transform:translate(-50%,-50%);
+    display:none;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    background:rgba(255,255,255,0.9);
+    padding:20px;
+    border-radius:12px;
+    text-align:center;
+    z-index:1001;
+}
 </style>
 </head>
 <body>
 
 <div class="chat-box">
-    <h3>Lô! Đây là địa bàn của anh Khôi top1 sever trái đấtđất</h3>
-    <div id="messages"></dgame";
-function onUserSendMessage(text){
-    if(text.trim().toLowerCase()===GAME_PASSWORD.toLowerCase()){
-        openGame();
-    }
-}
-</script>
+    <h3>Lô! Đây là địa bàn của anh Khôi top1 sever trái đất</h3>
+    <div id="messages"></div>
+    <div style="display:flex;">
+        <input type="text" id="chat-input" placeholder="Nhập tin nhắn...">
+        <button id="send-btn">Gửi</button>
+    </div>
+</div>
 
 <div id="game-container">
     <div id="start-screen">
@@ -113,27 +127,81 @@ function onUserSendMessage(text){
     </div>
     <canvas id="game"></canvas>
 </div>
+
+<div id="game-over">
+    <h2>Game Over!</h2>
+    <p id="final-score"></p>
+    <p id="best-score"></p>
+    <button onclick="restartGame()">Làm lại cuộc đời</button>
+</div>
+
 <button id="jump-btn">Bay</button>
 
 <script>
+// ================= Chat ===================
+function addMessage(text, sender="user"){
+    const msgDiv = document.createElement("div");
+    msgDiv.className = "msg";
+    msgDiv.style.background = sender==="user" ? "#d1e7dd" : "#f8d7da";
+    msgDiv.innerText = text;
+    document.getElementById("messages").appendChild(msgDiv);
+    document.getElementById("messages").scrollTop = document.getElementById("messages").scrollHeight;
+}
+
+function botReply(text){
+    text = text.trim().toLowerCase();
+    let reply = "Mình chưa hiểu bạn nói gì 😅";
+    if(text.includes("xin chào") || text.includes("hello")){
+        reply = "Chào bạn! 👋";
+    } else if(text.includes("tên bạn")){
+        reply = "Mình là Khôi Bot 😎";
+    } else if(text.includes("game")){
+        reply = "Nhập mật khẩu 'đã được anh khôi cho phép' là mở được game nha!";
+    } else if(text.includes("bye") || text.includes("tạm biệt")){
+        reply = "Tạm biệt! Hẹn gặp lại! 👋";
+    }
+    addMessage(reply, "bot");
+}
+
+document.getElementById("send-btn").addEventListener("click", ()=>{
+    const input = document.getElementById("chat-input");
+    const text = input.value;
+    if(text.trim()==="") return;
+    addMessage(text, "user");
+    input.value="";
+    botReply(text);
+    // Mở game nếu nhập đúng mật khẩu
+    const GAME_PASSWORD = "đã được anh khôi cho phép";
+    if(text.trim().toLowerCase() === GAME_PASSWORD){
+        openGame();
+    }
+});
+
+document.getElementById("chat-input").addEventListener("keydown", (e)=>{
+    if(e.key === "Enter") document.getElementById("send-btn").click();
+});
+
+// ================= Game ===================
 let canvas=document.getElementById("game");
 let ctx;
 let bird, pipes, score, running, anim, shieldActive=false, shieldTimer=0;
 let lastPipe=0, last=0;
+let speed = 3;
 const names=["Hùng","Hoàng","Việt","Tiến","Tín","Khoa","Sáng","Hậu","Duy","Phúc","Điền","Trung","Huy","Thắng","Quyền","Nguyên"];
 const rainbowColors=["red","orange","yellow","green","blue","indigo","violet"];
 let nameIndex=0;
 let colorIndex=0;
 let shieldIcon=null;
 
+// Lưu điểm cao nhất
+let bestScore = parseInt(localStorage.getItem('bestScore') || 0);
+
 // Resize canvas
 function resizeCanvas(){
     if(window.innerWidth>window.innerHeight){
-        // Landscape → PC
         canvas.width=window.innerWidth;
         canvas.height=window.innerHeight;
     } else {
-        // Mobile → dọc
         canvas.width=window.innerWidth;
         canvas.height=window.innerHeight*0.8;
     }
@@ -141,15 +209,14 @@ function resizeCanvas(){
 window.addEventListener("resize",resizeCanvas);
 resizeCanvas();
 
-// Open game
 function openGame(){
     document.getElementById("game-container").style.display="flex";
     document.getElementById("start-screen").style.display="flex";
     ctx=canvas.getContext("2d");
 }
 
-// Start game with countdown
 function startGame(){
+    speed = 3; // reset tốc độ
     const startScreen=document.getElementById("start-screen");
     startScreen.innerHTML="<h2>Chuẩn bị...</h2><p id='countdown'>3</p>";
     let count=3;
@@ -167,7 +234,6 @@ function startGame(){
     },1000);
 }
 
-// Initialize game
 function initGame(){
     ctx=canvas.getContext("2d");
     bird={x:canvas.width/4, y:canvas.height/2, vy:0};
@@ -180,23 +246,39 @@ function initGame(){
     colorIndex=0;
     shieldActive=false;
     shieldTimer=0;
+    shieldIcon=null;
 
-    // Controls
     window.onkeydown=e=>{if(e.code==="Space") bird.vy=-7;}
     document.getElementById("jump-btn").addEventListener("click",()=>{if(running) bird.vy=-7;});
 
     anim=requestAnimationFrame(loop);
 }
 
-// Close game
 function closeGame(){
     running=false;
     cancelAnimationFrame(anim);
     document.getElementById("game-container").style.display="none";
     document.getElementById("jump-btn").style.display="none";
+    showGameOver();
 }
 
-// Draw gradient background
+// Game over màn hình
+function showGameOver(){
+    document.getElementById("game-over").style.display="flex";
+    document.getElementById("final-score").innerText = "Điểm của bạn: "+score;
+    if(score>bestScore){
+        bestScore = score;
+        localStorage.setItem('bestScore', bestScore);
+    }
+    document.getElementById("best-score").innerText = "Điểm cao nhất: "+bestScore;
+}
+
+function restartGame(){
+    document.getElementById("game-over").style.display="none";
+    startGame();
+}
+
+// Draw background
 function drawBackground(){
     const gradient=ctx.createLinearGradient(0,0,0,canvas.height);
     gradient.addColorStop(0,"#a8edea");
@@ -205,7 +287,7 @@ function drawBackground(){
     ctx.fillRect(0,0,canvas.width,canvas.height);
 }
 
-// Draw spikes with names
+// Draw spikes
 function drawSpike(x, height, name, color){
     const spikeWidth=40;
     const spikeHeight=height;
@@ -216,31 +298,24 @@ function drawSpike(x, height, name, color){
     ctx.lineTo(x+spikeWidth,canvas.height);
     ctx.closePath();
     ctx.fill();
-    // Draw name
     ctx.fillStyle="white";
     ctx.font="16px Arial";
     ctx.fillText(name,x,canvas.height-spikeHeight-5);
 }
 
-// Spawn shield
-function spawnShield(){
-    shieldIcon={x:Math.random()*(canvas.width-50)+25, y:50, width:40, height:40};
-}
-
-// Game loop
 function loop(t){
     if(!running) return;
     const dt=t-last;
     last=t;
-    // Background
     drawBackground();
-    // Bird physics
+
+    // bird physics
     bird.vy+=0.35;
     bird.y+=bird.vy;
     if(bird.y>canvas.height-20) {bird.y=canvas.height-20; bird.vy=0;}
     if(bird.y<20) {bird.y=20; bird.vy=0;}
 
-    // Spawn spikes every 1500ms
+    // spawn spikes
     if(t-lastPipe>1500){
         lastPipe=t;
         let name=names[nameIndex];
@@ -250,55 +325,52 @@ function loop(t){
         colorIndex=(colorIndex+1)%rainbowColors.length;
     }
 
-    // Move spikes
-    pipes.forEach(p=>p.x-=3);
+    // move spikes
+    pipes.forEach(p=>p.x-=speed);
     pipes=pipes.filter(p=>p.x>-50);
 
-    // Draw spikes
+    // draw spikes + collision
     pipes.forEach(p=>{
         drawSpike(p.x,150,p.name,p.color);
-        // Collision
         if(bird.x+15>p.x && bird.x-15<p.x+40){
             if(bird.y>canvas.height-150){
                 if(!shieldActive){
                     closeGame();
-                    alert("Game Over! Điểm: "+score);
                     return;
                 }
             }
         }
-        // Score
         if(!p.passed && p.x+40<bird.x){p.passed=true; score++;}
     });
 
-    // Draw bird
+    // draw bird
     ctx.font="32px Arial";
     ctx.fillText("👧",bird.x-16,bird.y+16);
 
-    // Draw shield
+    // shield
     if(shieldIcon){
         ctx.font="32px Arial";
         ctx.fillText("🕴️",shieldIcon.x,shieldIcon.y);
         ctx.font="16px Arial";
         ctx.fillText("Khôi DZ",shieldIcon.x-10,shieldIcon.y+30);
-        // Check collision
         if(bird.x>shieldIcon.x-10 && bird.x<shieldIcon.x+30 && bird.y>shieldIcon.y-10 && bird.y<shieldIcon.y+30){
             shieldActive=true;
-            shieldTimer=7000; // 7 seconds
+            shieldTimer=7000;
             shieldIcon=null;
+            speed += 1; // tăng tốc độ khi lấy lá chắn
         }
     }
 
-    // Draw shield timer
+    // draw shield timer
     if(shieldActive){
         ctx.fillStyle="white";
         ctx.font="18px Arial";
         ctx.fillText("Shield: "+Math.ceil(shieldTimer/1000)+"s",10,30);
         shieldTimer-=dt;
-        if(shieldTimer<=0) {shieldActive=false; shieldTimer=0;}
+        if(shieldTimer<=0){shieldActive=false; shieldTimer=0;}
     }
 
-    // Score
+    // draw score
     ctx.fillStyle="black";
     ctx.font="20px Arial";
     ctx.fillText("Score: "+score,canvas.width-120,30);
