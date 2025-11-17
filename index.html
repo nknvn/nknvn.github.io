@@ -1,194 +1,835 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-<meta charset="UTF-8">
-<title>Game Bảo Vệ Cô Gái - Flappy Pro + Skin + Sound + Music</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Web Chat + Stickman Boost–style (Parkour)</title>
 <style>
-html, body { margin:0; padding:0; background:#111; height:100%; overflow:hidden; font-family:Arial,sans-serif; color:white;}
-#start-screen, #game-over-screen { position:absolute; inset:0; background:#000000cc; display:flex; flex-direction:column; justify-content:center; align-items:center; gap:20px; font-size:28px; z-index:10;}
-button { padding:12px 20px; font-size:20px; border-radius:10px; border:none; cursor:pointer; background:#00c8ff; color:black; font-weight:bold;}
-#jump-btn { display:none; position:absolute; bottom:20px; left:50%; transform:translateX(-50%); z-index:5;}
-#shop-btn { position:absolute; top:20px; right:20px; z-index:5; font-size:18px;}
-#shop { position:absolute; top:60px; right:20px; width:180px; background:#222; border:2px solid #00c8ff; border-radius:10px; padding:10px; display:none; z-index:6;}
-.shop-item { display:flex; justify-content:space-between; margin:5px 0;}
-canvas { background:#222; display:block; margin:0 auto;}
-.name-tag { position:absolute; font-size:16px; color:yellow; text-shadow:1px 1px 2px black; pointer-events:none; white-space:nowrap;}
+  :root{
+    --accent:#0b5cff;
+    --bg:#0f1724;
+    --card:#ffffff;
+    --muted:#9aa4b2;
+  }
+  html,body{height:100%;margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial; background:var(--bg); color:#111;}
+  /* --- Chat layout similar to ChatGPT --- */
+  .app {
+    display:flex;
+    height:100vh;
+    gap:16px;
+    padding:18px;
+    box-sizing:border-box;
+  }
+  .left {
+    width:360px;
+    max-width:38%;
+    min-width:280px;
+    background:#f7f7f8;
+    border-radius:12px;
+    box-shadow:0 6px 20px rgba(2,6,23,0.4);
+    display:flex;
+    flex-direction:column;
+    overflow:hidden;
+  }
+  .chat-header {
+    padding:18px;
+    border-bottom:1px solid rgba(2,6,23,0.06);
+    display:flex;
+    align-items:center;
+    gap:12px;
+  }
+  .brand {
+    font-weight:700;
+    font-size:15px;
+  }
+  .welcome {
+    color:var(--muted);
+    font-size:13px;
+    margin-top:6px;
+  }
+  .history {
+    flex:1;
+    overflow:auto;
+    padding:12px 14px;
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+    background:linear-gradient(180deg, #f7f7f8, #f3f5f7);
+  }
+  .composer {
+    padding:12px;
+    border-top:1px solid rgba(2,6,23,0.06);
+    display:flex;
+    gap:8px;
+    align-items:center;
+  }
+  .composer input[type="text"]{
+    flex:1;
+    padding:10px 12px;
+    border-radius:8px;
+    border:1px solid rgba(2,6,23,0.08);
+    outline:none;
+    font-size:14px;
+  }
+  .composer button{
+    padding:10px 14px;
+    background:var(--accent);
+    color:white;
+    border:none;
+    border-radius:8px;
+    cursor:pointer;
+    font-weight:600;
+  }
+  .bubble.user { align-self:flex-end; background:#e6f0ff; color:#032a7a; padding:10px 12px; border-radius:12px; max-width:85%; }
+  .bubble.bot  { align-self:flex-start; background:white; color:#26303a; padding:10px 12px; border-radius:12px; max-width:85%; box-shadow:0 1px 0 rgba(2,6,23,0.04); }
+
+  /* --- Right: Game container full screen when active --- */
+  .right {
+    flex:1;
+    position:relative;
+    border-radius:12px;
+    overflow:hidden;
+    background:linear-gradient(180deg,#c7f2ff,#ffe6f0);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+
+  /* Game canvas fills right area */
+  #game-wrap {
+    width:100%;
+    height:100%;
+    position:relative;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  canvas { width:100%; height:100%; display:block; background:transparent; }
+
+  /* Start screen overlay */
+  .start-overlay, .game-over-overlay {
+    position:absolute;
+    z-index:40;
+    left:50%;
+    top:50%;
+    transform:translate(-50%,-50%);
+    background:rgba(255,255,255,0.96);
+    padding:18px;
+    border-radius:12px;
+    min-width:320px;
+    box-shadow:0 20px 50px rgba(2,6,23,0.25);
+    text-align:center;
+  }
+  .start-overlay h2 { margin:0 0 8px 0; font-size:20px; }
+  .start-overlay p { margin:0 0 14px 0; color:#444; }
+  .big-btn {
+    background:linear-gradient(180deg,#ffd05b,#f1c40f);
+    border:none; padding:12px 20px; border-radius:12px; cursor:pointer; font-weight:700;
+    box-shadow:0 8px 20px rgba(0,0,0,0.15);
+  }
+
+  /* Mobile big jump button */
+  #jump-btn {
+    position: absolute;
+    z-index:50;
+    bottom:6%;
+    left:50%;
+    transform:translateX(-50%);
+    padding:18px 28px;
+    border-radius:20px;
+    background:#ffd05b;
+    color:#111;
+    font-weight:800;
+    border:none;
+    display:none;
+    box-shadow:0 12px 30px rgba(2,6,23,0.2);
+  }
+
+  /* Game HUD */
+  .hud {
+    position:absolute; top:16px; left:16px; z-index:45; color:#fff; text-shadow:0 2px 6px rgba(0,0,0,0.4);
+    font-weight:700; font-size:20px;
+  }
+  .name-belt { position:absolute; z-index:44; bottom:14px; left:50%; transform:translateX(-50%); background:rgba(0,0,0,0.45); color:#fff; padding:6px 10px; border-radius:10px; font-weight:700; }
+
+  /* Game over overlay */
+  .game-over-overlay h1 { margin:0 0 8px 0; font-size:26px; }
+  .game-over-overlay p { margin:0 0 12px 0; color:#222; }
+
+  /* Responsive fallback */
+  @media (max-width:900px){
+    .left{display:none;}
+    #jump-btn{display:block;}
+  }
 </style>
 </head>
 <body>
+<div class="app">
+  <!-- LEFT CHAT (ChatGPT-like UI) -->
+  <div class="left">
+    <div class="chat-header">
+      <div>
+        <div class="brand">KhôiBot</div>
+        <div class="welcome">Xin chào! Bạn hỏi gì hôm nay?</div>
+      </div>
+    </div>
 
-<div id="start-screen">
-    <h2>Game Bảo Vệ Cô Gái</h2>
-    <button id="start-btn">Start</button>
+    <div class="history" id="history">
+      <!-- initial instruction/history slot; will load first question later -->
+      <div class="bubble bot" id="init-bot">Mình sẵn sàng — nhập mật khẩu để chơi: <strong>đã được anh khôi cho phép</strong></div>
+    </div>
+
+    <div class="composer">
+      <input id="chat-input" placeholder="Gõ ở đây và Enter để gửi..." autocomplete="off" />
+      <button id="send-btn">Gửi</button>
+    </div>
+  </div>
+
+  <!-- RIGHT: GAME -->
+  <div class="right">
+    <div id="game-wrap">
+      <canvas id="game"></canvas>
+
+      <!-- Start overlay -->
+      <div class="start-overlay" id="start-overlay">
+        <h2>BẢO VỆ CÔ GÁI - STICKMAN PARKOUR</h2>
+        <p>Nhấn <strong>Dấn thân vào đời</strong> để bắt đầu. Nhấn Space / chạm để Nhảy, giữ chạm để Slide.</p>
+        <button class="big-btn" id="start-btn">Dấn thân vào đời</button>
+      </div>
+
+      <!-- HUD -->
+      <div class="hud" id="hud">Score: 0</div>
+      <div class="name-belt" id="name-belt" style="display:none">Tên: —</div>
+
+      <!-- Game over -->
+      <div class="game-over-overlay" id="game-over" style="display:none">
+        <h1>Game Over</h1>
+        <p id="final-score">Điểm: 0</p>
+        <p id="best">Điểm cao nhất: 0</p>
+        <button class="big-btn" id="retry">Làm lại cuộc đời</button>
+      </div>
+    </div>
+
+  </div>
 </div>
 
-<div id="game-over-screen" style="display:none;">
-    <h2>Thua rồi!</h2>
-    <p id="final-score"></p>
-    <button id="restart-btn">Chơi lại</button>
-</div>
-
-<canvas id="gameCanvas" width="420" height="600"></canvas>
-<button id="jump-btn">BAY</button>
-<button id="shop-btn">🛒 Shop</button>
-<div id="shop">
-    <h3>Shop Skin</h3>
-    <div class="shop-item" data-cost="10" data-color="pink">🌸 Hồng - 10 điểm <button>Buy</button></div>
-    <div class="shop-item" data-cost="20" data-color="cyan">💧 Xanh - 20 điểm <button>Buy</button></div>
-    <div class="shop-item" data-cost="30" data-color="gold">⭐ Vàng - 30 điểm <button>Buy</button></div>
-</div>
-
-<div id="name-container"></div>
+<button id="jump-btn">Bay</button>
 
 <script>
-const canvas=document.getElementById("gameCanvas");
-const ctx=canvas.getContext("2d");
+/* ============================
+   Config & Assets
+   ============================ */
+const PASSWORD = "đã được anh khôi cho phép";
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
+const startOverlay = document.getElementById("start-overlay");
+const startBtn = document.getElementById("start-btn");
+const jumpBtn = document.getElementById("jump-btn");
+const hud = document.getElementById("hud");
+const nameBelt = document.getElementById("name-belt");
+const gameOverOverlay = document.getElementById("game-over");
+const finalScoreText = document.getElementById("final-score");
+const bestText = document.getElementById("best");
+const retryBtn = document.getElementById("retry");
 
-// Nhân vật
-let girl={x:80, y:250, radius:18, velocity:0, color:"pink", angle:0, flash:false, flashTimer:0};
+let bgImg = new Image(); bgImg.src = "bg.jpg"; // optional; fallback gradient if not exist
+let girlImg = new Image(); girlImg.src = "girl.png"; // optional, not required
 
-// Vật lý
-let gravity=0.35, jumpPower=-7;
+/* --------------------------
+   WebAudio - synthesize sounds (style: metallic / sharp)
+   We'll build short sounds for: jump, double-jump, slide, hit, coin, checkpoint
+   -------------------------- */
+const AudioCtx = window.AudioContext || window.webkitAudioContext;
+const audioCtx = new AudioCtx();
 
-// Pipes
-let pipes=[], pipeGap=160, pipeWidth=60, pipeSpeed=2.5;
-let score=0, running=false, spawnTimer=0;
-const nameContainer=document.getElementById("name-container");
-const randomNames=["Noob","ProVip","ThanhNiênCứng","GáiXinh","Boy1m85","SiuNhan"];
+function playBeep(freq=440, time=0.08, type='sine', gain=0.12) {
+  const o = audioCtx.createOscillator();
+  const g = audioCtx.createGain();
+  o.type = type;
+  o.frequency.value = freq;
+  g.gain.value = gain;
+  o.connect(g); g.connect(audioCtx.destination);
+  o.start();
+  o.stop(audioCtx.currentTime + time);
+}
+function playSharpAttack(freq=880, dur=0.09){
+  const o = audioCtx.createOscillator();
+  const g = audioCtx.createGain();
+  const f=audioCtx.createBiquadFilter(); f.type='highpass'; f.frequency.value=800;
+  o.type='square'; o.frequency.value=freq;
+  g.gain.value=0.14;
+  o.connect(f); f.connect(g); g.connect(audioCtx.destination);
+  o.start(); o.stop(audioCtx.currentTime+dur);
+}
+function playNoiseHit(duration=0.12){
+  const bufferSize = audioCtx.sampleRate * duration;
+  const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+  const data = buffer.getChannelData(0);
+  for (let i=0;i<bufferSize;i++){
+    data[i] = (Math.random()*2-1) * Math.exp(-i/bufferSize*6);
+  }
+  const src = audioCtx.createBufferSource();
+  src.buffer = buffer;
+  const g = audioCtx.createGain(); g.gain.value=0.18;
+  const f = audioCtx.createBiquadFilter(); f.type='highpass'; f.frequency.value=800;
+  src.connect(f); f.connect(g); g.connect(audioCtx.destination);
+  src.start();
+}
+function playCoin(){
+  playBeep(1200,0.06,'sine',0.09);
+  setTimeout(()=>playBeep(1500,0.05,'sine',0.07),60);
+}
+function playJump(){
+  playBeep(420,0.09,'triangle',0.11);
+}
+function playDoubleJump(){
+  playBeep(520,0.08,'sine',0.12);
+  setTimeout(()=>playBeep(720,0.06,'sine',0.08),70);
+}
+function playSlide(){
+  playSharpAttack(1000,0.09);
+}
+function playDie(){
+  playNoiseHit(0.15);
+}
+function playCheckpoint(){ playBeep(800,0.12,'sine',0.14); }
 
-// Shop
-const shopBtn=document.getElementById("shop-btn");
-const shopDiv=document.getElementById("shop");
-shopBtn.addEventListener("click",()=>{shopDiv.style.display = shopDiv.style.display==="none"?"block":"none";});
+/* ============================
+   Game State
+   ============================ */
+let DPR = window.devicePixelRatio || 1;
+function resize() {
+  DPR = window.devicePixelRatio || 1;
+  const rect = canvas.getBoundingClientRect();
+  canvas.width = Math.floor(rect.width * DPR);
+  canvas.height = Math.floor(rect.height * DPR);
+  ctx.setTransform(DPR,0,0,DPR,0,0);
+}
+window.addEventListener('resize',()=>{ resize(); renderOnce(); });
+resize();
 
-/* ======= ÂM THANH ======= */
-const soundJump = new Audio("data:audio/wav;base64,UklGRhIAAABXQVZFZm10IBAAAAABAAEAQB8AAIA+AAACABAAZGF0YQgAAAAA");
-const soundHit = new Audio("data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAIA+AAACABAAZGF0YQgAAAAA");
-const soundBuy  = new Audio("data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAIA+AAACABAAZGF0YQgAAAAA");
-const soundPoint = new Audio("data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAIA+AAACABAAZGF0YQgAAAAA");
-const bgMusic = new Audio("data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAIA+AAACABAAZGF0YQgAAAAA");
-bgMusic.loop=true; bgMusic.volume=0.2;
+/* Player (stickman) */
+const PLAYER = {
+  x:140, y:100, w:28, h:48,
+  vy:0, onGround:false, jumps:0,
+  sliding:false,
+  color:'#111'
+};
 
-/* SPAWN PIPE */
-function spawnPipe(){
-    const topHeight=Math.random()*250+50;
-    const bottomHeight=canvas.height - topHeight - pipeGap;
-    const id=Math.random().toString(36).substring(2,9);
-    pipes.push({x:canvas.width, topHeight, bottomHeight, id, offset:Math.random()*10});
-    const nameTag=document.createElement("div");
-    nameTag.className="name-tag"; nameTag.id="name-"+id;
-    nameTag.innerText=randomNames[Math.floor(Math.random()*randomNames.length)];
-    nameContainer.appendChild(nameTag);
+/* World */
+let platforms = [];    // {x, y, w, h, unstable:boolean, fallTimer}
+let obstacles = [];    // saws, spikes, etc. {x,y,w,h,type,dir}
+let items = [];        // coins, boost
+let scroll = 0;
+let speed = 3.2;       // base forward speed (tweak to match StickmanBoost feel)
+let gravity = 0.76;    // gravity stronger to make jumps snappy
+let jumpPower = -13.0; // first jump
+let doubleJumpPower = -11.0;
+let maxJumps = 2;
+let spawnTimer = 0;
+let score = 0;
+let best = parseInt(localStorage.getItem('sb_best') || '0',10);
+bestText.innerText = 'Điểm cao nhất: ' + best;
+hud.innerText = 'Score: 0';
+let alive = false;
+let lastCheckpointX = 0;
+
+/* Auto-generation params */
+const PLATFORM_MIN_W = 60;
+const PLATFORM_MAX_W = 220;
+const GAP_MIN = 90;
+const GAP_MAX = 180;
+const PLATFORM_Y_MIN = 160;
+const PLATFORM_Y_MAX_OFFSET = 180;
+
+/* Names list (for belts under traps) */
+const NAMES = ["Hùng","Hoàng","Việt","Tiến","Tín","Khoa","Sáng","Hậu","Duy","Phúc","Điền","Trung","Huy","Thắng","Quyền","Nguyên"];
+let nameIndex = 0;
+
+/* Utilities */
+function rand(a,b){ return Math.floor(Math.random()*(b-a+1))+a; }
+
+/* ============================
+   Input: keyboard and touch
+   ============================ */
+let keys = {};
+window.addEventListener('keydown', (e)=>{
+  keys[e.code]=true;
+  if(!alive) return;
+  if(e.code==='Space') handleJump();
+  if(e.code==='ArrowDown') handleSlideStart();
+});
+window.addEventListener('keyup', (e)=>{
+  keys[e.code]=false;
+  if(e.code==='ArrowDown') handleSlideEnd();
+});
+
+/* touch controls */
+let touchLeft=false, touchRight=false;
+canvas.addEventListener('touchstart',(e)=>{
+  e.preventDefault();
+  if(!alive) return;
+  const t = e.touches[0];
+  const rect = canvas.getBoundingClientRect();
+  const x = (t.clientX - rect.left);
+  const w = rect.width;
+  // left half = jump, right half = slide (for player preference)
+  if(x < w*0.6){ handleJump(); } else { handleSlideStart(); }
+});
+canvas.addEventListener('touchend',(e)=>{ handleSlideEnd(); });
+
+/* Jump / slide handlers */
+function handleJump(){
+  if(!alive) return;
+  if(PLAYER.jumps < maxJumps){
+    if(PLAYER.jumps===0){
+      PLAYER.vy = jumpPower;
+      playJump();
+    } else {
+      PLAYER.vy = doubleJumpPower;
+      playDoubleJump();
+    }
+    PLAYER.jumps++;
+    PLAYER.onGround = false;
+  }
+}
+function handleSlideStart(){
+  if(!alive) return;
+  PLAYER.sliding = true;
+  playSlide();
+}
+function handleSlideEnd(){
+  PLAYER.sliding = false;
 }
 
-/* START GAME */
-document.getElementById("start-btn").addEventListener("click",()=>{
-    document.getElementById("start-screen").style.display="none";
-    document.getElementById("jump-btn").style.display="block";
-    bgMusic.play();
-    initGame();
+/* UI buttons */
+startBtn.addEventListener('click', ()=> {
+  startGame();
+  // unlock audio on mobile
+  if(audioCtx.state === 'suspended') audioCtx.resume();
 });
-document.getElementById("jump-btn").addEventListener("click",()=>{jump(); soundJump.play();});
-document.addEventListener("keydown", e=>{if(e.code==="Space"){jump(); soundJump.play();}});
-document.getElementById("restart-btn").addEventListener("click",()=> location.reload());
+jumpBtn.addEventListener('click', ()=> { if(alive) handleJump(); });
+retryBtn.addEventListener('click', ()=> { startGame(); });
 
-function jump(){ girl.velocity=jumpPower; }
+/* ============================
+   Game world generator
+   ============================ */
+function spawnInitialPlatforms() {
+  platforms = [];
+  let x = 0;
+  // start with a stable wide platform
+  platforms.push({x:0, y: canvas.height - 120, w: 600, h: 20, unstable:false});
+  x = 600;
+  // next few
+  for(let i=0;i<6;i++){
+    const w = rand(100,220);
+    const gap = rand(80,140);
+    const y = canvas.height - 120 + rand(-40,60);
+    platforms.push({x:x+gap, y:clampPlatformY(y), w:w, h:20, unstable: (Math.random()<0.12), fallTimer:0});
+    x += gap + w;
+  }
+  // set scroll reference
+  scroll = 0;
+}
+function clampPlatformY(y){
+  const topLimit = 80;
+  const bottomLimit = canvas.height - 80;
+  if(y < topLimit) return topLimit;
+  if(y > bottomLimit) return bottomLimit;
+  return y;
+}
 
-/* SHOP */
-document.querySelectorAll(".shop-item").forEach(item=>{
-    const btn=item.querySelector("button");
-    btn.addEventListener("click",()=>{
-        const cost=parseInt(item.dataset.cost);
-        if(score>=cost){ 
-            girl.color=item.dataset.color; 
-            girl.flash=true; girl.flashTimer=0;
-            score-=cost; 
-            soundBuy.play();
-        } else alert("Không đủ điểm!");
-    });
-});
+/* create next platform when needed */
+function spawnNextIfNeeded() {
+  // find rightmost platform
+  let rightmost = 0;
+  if(platforms.length) rightmost = platforms[platforms.length-1].x + platforms[platforms.length-1].w;
+  while(rightmost < canvas.width + 600){
+    const gap = rand(GAP_MIN, GAP_MAX);
+    const w = rand(PLATFORM_MIN_W, PLATFORM_MAX_W);
+    // height relative to previous last y
+    const prevY = (platforms.length ? platforms[platforms.length-1].y : canvas.height - 140);
+    let y = prevY + rand(-120, 120);
+    y = clampPlatformY(y);
+    const unstable = Math.random() < 0.12; // 12% unstable
+    const p = {x: rightmost + gap, y: y, w: w, h: 20, unstable: unstable, fallTimer:0};
+    // sometimes put saw or spike on platform
+    if(Math.random() < 0.28){
+      // create obstacle just after platform start
+      const type = (Math.random()<0.6 ? 'saw' : 'spike');
+      obstacles.push({x: p.x + rand(20, p.w-20), y: p.y-12, w: 32, h:32, type: type, dir: (Math.random()<0.5?-1:1), speed: (type==='saw'?1.6:0)});
+    }
+    // sometimes coins
+    if(Math.random() < 0.35){
+      const count = rand(1,4);
+      for(let i=0;i<count;i++){
+        items.push({x: p.x + 20 + i*28, y: p.y - 36, type:'coin', collected:false});
+      }
+    }
+    // sometimes boost item
+    if(Math.random() < 0.07){
+      items.push({x: p.x + Math.floor(p.w/2), y: p.y - 60, type:'boost', used:false});
+    }
+    // name tag under gap (like you asked to show names under traps)
+    p.name = NAMES[nameIndex]; nameIndex = (nameIndex + 1) % NAMES.length;
 
-/* INIT GAME */
-function initGame(){ girl.y=250; girl.velocity=0; pipes=[]; score=0; running=true; spawnTimer=0; spawnPipe(); requestAnimationFrame(gameLoop); }
+    platforms.push(p);
+    rightmost = p.x + p.w;
+  }
+}
 
-/* GAME LOOP */
-function gameLoop(){
-    if(!running) return;
-    ctx.clearRect(0,0,canvas.width,canvas.height);
+/* ============================
+   Collision helpers
+   ============================ */
+function rectsCollide(a,b){
+  return !(a.x + a.w < b.x || a.x > b.x + b.w || a.y + a.h < b.y || a.y > b.y + b.h);
+}
 
-    girl.velocity+=gravity;
-    girl.y+=girl.velocity;
-    girl.angle=Math.max(Math.min(girl.velocity*5,25),-25);
+/* ============================
+   Start / Reset / Main loop
+   ============================ */
+let lastTime = 0;
+function startGame(){
+  // hide overlays
+  startOverlay.style.display = 'none';
+  gameOverOverlay.style.display = 'none';
+  jumpBtn.style.display = (window.innerWidth < 900) ? 'block' : 'block'; // always visible for convenience
+  // init
+  resize(); // ensure canvas size correct
+  PLAYER.x = 140; PLAYER.y = canvas.height/2; PLAYER.w = 28; PLAYER.h = 48; PLAYER.vy=0; PLAYER.jumps=0; PLAYER.sliding=false;
+  platforms = []; obstacles = []; items = [];
+  score = 0; speed = 3.2; alive = true; lastCheckpointX = 0;
+  spawnInitialPlatforms();
+  spawnNextIfNeeded();
+  lastTime = performance.now();
+  playCheckpoint();
+  requestAnimationFrame(gameLoop);
+}
 
-    if(girl.flash){
-        girl.flashTimer +=16.6;
-        ctx.fillStyle=(Math.floor(girl.flashTimer/100)%2===0)?"white":girl.color;
-        if(girl.flashTimer>1000) girl.flash=false;
-    } else ctx.fillStyle=girl.color;
+/* Game over handler */
+function doGameOver(){
+  alive = false;
+  playDie();
+  gameOverOverlay.style.display = 'block';
+  finalScoreText.innerText = 'Điểm: ' + score;
+  if(score > best){ best = score; localStorage.setItem('sb_best', String(best)); }
+  bestText.innerText = 'Điểm cao nhất: ' + best;
+}
 
-    ctx.save();
-    ctx.translate(girl.x+girl.radius, girl.y+girl.radius);
-    ctx.rotate(girl.angle*Math.PI/180);
-    ctx.beginPath();
-    ctx.arc(0,0,girl.radius,0,Math.PI*2);
-    ctx.fill();
-    ctx.closePath();
-    ctx.restore();
+/* Main update & render */
+function gameLoop(ts){
+  if(!alive) return;
+  const dt = Math.min(34, ts - lastTime) / 16.666; // normalized to ~60fps
+  lastTime = ts;
 
-    pipeSpeed+=0.0006;
-    spawnTimer+=16.6;
-    if(spawnTimer>=1600){ spawnPipe(); spawnTimer=0; }
+  // physics update
+  PLAYER.vy += gravity * dt;
+  PLAYER.y += PLAYER.vy * dt;
 
-    for(let i=pipes.length-1;i>=0;i--){
-        const pipe=pipes[i];
-        pipe.x-=pipeSpeed;
-        const topOsc=Math.sin(Date.now()/500 + pipe.offset)*5;
-        const bottomOsc=Math.sin(Date.now()/500 + pipe.offset+1)*5;
+  // horizontal scroll simulated by moving platforms left by speed
+  const pxSpeed = speed * dt;
+  for(const p of platforms) p.x -= pxSpeed;
+  for(const o of obstacles) o.x -= pxSpeed;
+  for(const it of items) it.x -= pxSpeed;
 
-        ctx.fillStyle="green";
-        ctx.fillRect(pipe.x,0,pipeWidth,pipe.topHeight+topOsc);
-        ctx.fillRect(pipe.x,canvas.height-pipe.bottomHeight+bottomOsc,pipeWidth,pipe.bottomHeight);
+  scroll += pxSpeed;
 
-        const nameDiv=document.getElementById("name-"+pipe.id);
-        if(nameDiv){ 
-            nameDiv.style.left=(pipe.x+pipeWidth/2-nameDiv.offsetWidth/2)+"px";
-            nameDiv.style.top=(canvas.height-pipe.bottomHeight-30+bottomOsc)+"px";
-        }
-
-        if(girl.x+girl.radius>pipe.x && girl.x<pipe.x+pipeWidth &&
-           (girl.y<pipe.topHeight+topOsc || girl.y+girl.radius*2>canvas.height-pipe.bottomHeight+bottomOsc)){
-            soundHit.play();
-            gameOver();
-        }
-
-        if(pipe.x+pipeWidth<0){ 
-            if(nameDiv) nameDiv.remove(); 
-            pipes.splice(i,1); 
-            score++; 
-            soundPoint.play();
+  // check ground collisions: simple AABB against platforms
+  PLAYER.onGround = false;
+  for(const p of platforms){
+    // check if player's feet collide with top of platform (only when falling)
+    const playerRect = {x: PLAYER.x - PLAYER.w/2, y: PLAYER.y - PLAYER.h, w: PLAYER.w, h: PLAYER.h};
+    const platRect = {x: p.x, y: p.y - 2, w: p.w, h: p.h + 2};
+    if(playerRect.x + playerRect.w > platRect.x && playerRect.x < platRect.x + platRect.w &&
+       playerRect.y + playerRect.h >= platRect.y && playerRect.y + playerRect.h <= platRect.y + 30 &&
+       PLAYER.vy >= 0) {
+        // snap to platform
+        PLAYER.y = platRect.y;
+        PLAYER.vy = 0;
+        PLAYER.onGround = true;
+        PLAYER.jumps = 0;
+        // unstable platform logic
+        if(p.unstable){
+          p.fallTimer = (p.fallTimer || 0) + (1 * dt);
+          if(p.fallTimer > 24){ // after a while it falls
+            p.y += 6 * dt;
+            if(p.y > canvas.height + 200){
+              // platform fell
+            }
+          }
         }
     }
+  }
 
-    if(girl.y+girl.radius*2>=canvas.height){ soundHit.play(); gameOver();}
+  // if player falls off screen
+  if(PLAYER.y > canvas.height + 60){ doGameOver(); return; }
 
-    ctx.fillStyle="white"; ctx.font="26px Arial";
-    ctx.fillText("Điểm: "+score,10,30);
+  // obstacles collisions
+  for(const o of obstacles){
+    if(o.type === 'saw'){
+      // saw rotation simulated visually; collision is circle
+      const sx = o.x; const sy = o.y;
+      const dx = (PLAYER.x) - sx;
+      const dy = (PLAYER.y - PLAYER.h/2) - sy;
+      const dist = Math.hypot(dx,dy);
+      if(dist < 28){
+        if(!PLAYER.sliding){ doGameOver(); return; }
+      }
+      // saw moves lightly on top
+      o.x += Math.sin((ts + o.x)/400) * 0.2;
+    } else if(o.type === 'spike'){
+      // simple rectangle collision
+      const pr = {x: PLAYER.x - PLAYER.w/2, y: PLAYER.y - PLAYER.h, w: PLAYER.w, h: PLAYER.h};
+      const or = {x: o.x-12, y: o.y, w:o.w+24, h:o.h};
+      if(rectsCollide(pr,or)){
+        if(!PLAYER.sliding) { doGameOver(); return; }
+      }
+    }
+  }
 
-    requestAnimationFrame(gameLoop);
+  // items collection
+  for(const it of items){
+    if(it.type==='coin' && !it.collected){
+      const pr = {x:PLAYER.x - PLAYER.w/2, y:PLAYER.y - PLAYER.h, w:PLAYER.w, h:PLAYER.h};
+      const ir = {x:it.x-8, y:it.y-8, w:16, h:16};
+      if(rectsCollide(pr,ir)){
+        it.collected = true; score += 1; playCoin();
+        hud.innerText = 'Score: ' + score;
+      }
+    } else if(it.type==='boost' && !it.used){
+      const pr = {x:PLAYER.x - PLAYER.w/2, y:PLAYER.y - PLAYER.h, w:PLAYER.w, h:PLAYER.h};
+      const ir = {x:it.x-10, y:it.y-10, w:20, h:20};
+      if(rectsCollide(pr,ir)){
+        it.used = true; speed += 1.2; playCheckpoint();
+        // speed decays slowly back
+        setTimeout(()=>{ const id = setInterval(()=>{ speed -= 0.08; if(speed <= 3.2){ clearInterval(id); speed = 3.2;} }, 200); }, 2000);
+      }
+    }
+  }
+
+  // scoring: every platform passed
+  for(const p of platforms){
+    if(!p.passed && (p.x + p.w) < PLAYER.x - 10){
+      p.passed = true;
+      score += 1;
+      hud.innerText = 'Score: ' + score;
+      playCoin();
+      // checkpoint at some intervals
+      if(score % 10 === 0){
+        lastCheckpointX = p.x;
+        playCheckpoint();
+        // store checkpoint
+        localStorage.setItem('sb_checkpoint', JSON.stringify({score:score, x:p.x}));
+      }
+    }
+  }
+
+  // cleanup off-screen
+  platforms = platforms.filter(p => p.x + p.w > -400);
+  obstacles = obstacles.filter(o => o.x > -400);
+  items = items.filter(i => (i.x > -400) && (i.collected !== true) && (i.used !== true));
+
+  // spawn more
+  spawnNextIfNeeded();
+
+  // draw
+  render();
+
+  requestAnimationFrame(gameLoop);
 }
 
-/* GAME OVER */
-function gameOver(){
-    running=false;
-    pipes.forEach(p=>{
-        const t=document.getElementById("name-"+p.id);
-        if(t) t.remove();
-    });
-    document.getElementById("final-score").innerText="Điểm của bạn: "+score;
-    document.getElementById("game-over-screen").style.display="flex";
-    document.getElementById("jump-btn").style.display="none";
-    bgMusic.pause();
+/* render one frame (when resizing) */
+function renderOnce(){
+  // draw once for sizing
+  render();
 }
+
+/* draw function */
+function render(){
+  // background
+  if(bgImg.complete){
+    // scale-cover bg
+    const cw = canvas.width / DPR, ch = canvas.height / DPR;
+    ctx.save();
+    ctx.fillStyle = ctx.createPattern(bgImg,'repeat');
+    ctx.fillRect(0,0,cw,ch);
+    ctx.restore();
+  } else {
+    // gradient
+    const cw = canvas.width / DPR, ch = canvas.height / DPR;
+    const g = ctx.createLinearGradient(0,0,cw,ch);
+    g.addColorStop(0,'#a8edea'); g.addColorStop(1,'#fed6e3');
+    ctx.fillStyle = g; ctx.fillRect(0,0,cw,ch);
+  }
+
+  // platforms
+  for(const p of platforms){
+    // draw platform rectangle
+    ctx.fillStyle = p.unstable ? '#b04a3b' : '#5a3c2b';
+    ctx.fillRect(p.x, p.y, p.w, p.h);
+    // name below gap (center)
+    if(p.name){
+      ctx.fillStyle = '#ffffff';
+      ctx.font = '16px Arial';
+      ctx.fillText(p.name, p.x + 8, p.y + p.h + 22);
+    }
+  }
+
+  // obstacles
+  for(const o of obstacles){
+    if(o.type === 'saw'){
+      // draw rotating saw
+      ctx.save();
+      ctx.translate(o.x, o.y);
+      const t = performance.now()/1000;
+      ctx.rotate(t*3);
+      ctx.fillStyle = '#c0c0c0';
+      for(let i=0;i<10;i++){
+        ctx.beginPath();
+        ctx.moveTo(0,0);
+        ctx.lineTo(12*Math.cos(i*2*Math.PI/10),12*Math.sin(i*2*Math.PI/10));
+        ctx.lineTo(6*Math.cos(i*2*Math.PI/10 + 0.3),6*Math.sin(i*2*Math.PI/10 + 0.3));
+        ctx.closePath(); ctx.fill();
+      }
+      ctx.restore();
+    } else if(o.type === 'spike'){
+      ctx.fillStyle = '#222';
+      ctx.beginPath();
+      ctx.moveTo(o.x, o.y + o.h);
+      ctx.lineTo(o.x + o.w/2, o.y);
+      ctx.lineTo(o.x + o.w, o.y + o.h);
+      ctx.closePath(); ctx.fill();
+    }
+  }
+
+  // items
+  for(const it of items){
+    if(it.type==='coin' && !it.collected){
+      ctx.fillStyle = '#ffd700';
+      ctx.beginPath(); ctx.arc(it.x, it.y, 7,0,Math.PI*2); ctx.fill();
+      ctx.strokeStyle='#aa8200'; ctx.stroke();
+    } else if(it.type==='boost' && !it.used){
+      ctx.fillStyle = '#00d1ff';
+      ctx.fillRect(it.x-10, it.y-10, 20,20);
+      ctx.fillStyle='#fff'; ctx.font='10px Arial'; ctx.fillText('BOOST', it.x-18, it.y+26);
+    }
+  }
+
+  // draw player (stickman with simple body + hair)
+  ctx.save();
+  const px = PLAYER.x, py = PLAYER.y;
+  // body
+  ctx.fillStyle = '#111';
+  ctx.beginPath();
+  ctx.ellipse(px, py-18, 10, 16, 0, 0, Math.PI*2); ctx.fill(); // torso-ish
+  // head
+  ctx.fillStyle='#fff';
+  ctx.beginPath(); ctx.arc(px, py-40, 10, 0, Math.PI*2); ctx.fill();
+  ctx.fillStyle='#111'; ctx.fillRect(px-6, py-44, 12, 4); // hair band / bangs
+  // legs
+  ctx.strokeStyle='#111'; ctx.lineWidth=4;
+  ctx.beginPath();
+  ctx.moveTo(px-6, py-4); ctx.lineTo(px-10, py+16);
+  ctx.moveTo(px+6, py-4); ctx.lineTo(px+12, py+18);
+  ctx.stroke();
+  // arms
+  ctx.beginPath();
+  if(PLAYER.sliding){
+    ctx.moveTo(px-10, py-28); ctx.lineTo(px+12, py-18);
+  } else {
+    ctx.moveTo(px-12, py-30); ctx.lineTo(px+12, py-30);
+  }
+  ctx.stroke();
+  ctx.restore();
+
+  // HUD
+  hud.innerText = 'Score: ' + score;
+}
+
+/* ============================
+   Chat integration & flow
+   ============================ */
+const historyEl = document.getElementById('history');
+const input = document.getElementById('chat-input');
+const sendBtn = document.getElementById('send-btn');
+
+let firstQuestionSaved = localStorage.getItem('sb_first_question') || '';
+
+if(firstQuestionSaved){
+  // show saved first question in history header as first user entry
+  const bubbleU = document.createElement('div'); bubbleU.className='bubble user'; bubbleU.innerText = firstQuestionSaved;
+  historyEl.insertBefore(bubbleU, historyEl.firstChild.nextSibling);
+}
+
+function appendBot(text){
+  const b = document.createElement('div'); b.className='bubble bot'; b.innerText = text;
+  historyEl.appendChild(b); historyEl.scrollTop = historyEl.scrollHeight;
+}
+function appendUser(text){
+  const u = document.createElement('div'); u.className='bubble user'; u.innerText = text;
+  historyEl.appendChild(u); historyEl.scrollTop = historyEl.scrollHeight;
+}
+
+sendBtn.addEventListener('click', onSend);
+input.addEventListener('keydown', (e)=>{ if(e.key==='Enter'){ onSend(); } });
+
+function onSend(){
+  const txt = input.value.trim();
+  if(!txt) return;
+  appendUser(txt);
+  if(!firstQuestionSaved){
+    localStorage.setItem('sb_first_question', txt);
+    firstQuestionSaved = txt;
+  }
+  // bot behavior: simple replies + open game on correct password
+  if(txt.toLowerCase() === PASSWORD.toLowerCase()){
+    appendBot('Mật khẩu hợp lệ — chuẩn bị chuyển sang game.');
+    // hide chat area and show start overlay
+    document.querySelector('.left').style.display = 'none';
+    // show right start overlay (already visible)
+    openGamePanel();
+  } else {
+    // canned replies
+    if(txt.toLowerCase().includes('game')) appendBot('Nhập mật khẩu để mở game, hoặc hỏi về điều khiển: "space để nhảy, xuống để trượt".');
+    else appendBot('Mình đã nhận — nhập mật khẩu để vào game.');
+  }
+  input.value='';
+}
+
+/* Open game panel (show right side start overlay if not shown) */
+function openGamePanel(){
+  // show start overlay (already in DOM)
+  startOverlay.style.display = 'block';
+  // hide chat box already done by caller
+}
+
+/* ============================
+   Render initial preview
+   ============================ */
+function renderPreview(){
+  // small draw to show preview in right pane when chat hidden (not playing)
+  resize();
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  const cw = canvas.width / DPR, ch = canvas.height / DPR;
+  const g = ctx.createLinearGradient(0,0,cw,ch);
+  g.addColorStop(0,'#a8edea'); g.addColorStop(1,'#fed6e3');
+  ctx.fillStyle = g; ctx.fillRect(0,0,cw,ch);
+
+  // draw a short sample platform and stickman
+  ctx.fillStyle = '#5a3c2b'; ctx.fillRect(120, ch - 140, 220, 20);
+  ctx.fillStyle = '#222'; ctx.beginPath(); ctx.arc(200, ch - 160, 8,0,Math.PI*2); ctx.fill();
+  // stickman preview
+  ctx.fillStyle = '#111'; ctx.beginPath(); ctx.arc(160, ch - 180, 10,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle = '#fff'; ctx.font='14px Arial'; ctx.fillText('Stickman Parkour preview', 14, 28);
+}
+renderPreview();
+
+/* helper */
+function playCoin(){ try{ playCoin(); }catch(e){} } // fallback
+
+/* Kickstart: resume audio upon user gesture */
+document.addEventListener('click', ()=>{ if(audioCtx && audioCtx.state==='suspended') audioCtx.resume(); }, {once:true});
 </script>
 </body>
-    </html>
+</html>
+
