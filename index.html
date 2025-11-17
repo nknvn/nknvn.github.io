@@ -169,8 +169,8 @@
   <div class="left">
     <div class="chat-header">
       <div>
-        <div class="brand">KhôiBot</div>
-        <div class="welcome">Xin chào! Bạn hỏi gì hôm nay?</div>
+        <div class="brand">chatkpt</div>
+        <div class="welcome">có gì nói luôn điđi</div>
       </div>
     </div>
 
@@ -192,7 +192,32 @@
 
       <!-- Start overlay -->
       <div class="start-overlay" id="start-overlay">
-        <h2>BẢO VỆ CÔ GÁI - STICKMAN PARKOUR</h2>
+        <h2>CHIẾN ĐẤU VÌ BẢN THÂN    <div class="chat-header">
+      <div>
+        <div class="brand">chatkpt</div>
+        <div class="welcome">có gì nói luôn điđi</div>
+      </div>
+    </div>
+
+    <div class="history" id="history">
+      <!-- initial instruction/history slot; will load first question later -->
+      <div class="bubble bot" id="init-bot">Mình sẵn sàng — nhập mật khẩu để chơi: <strong>đã được anh khôi cho phép</strong></div>
+    </div>
+
+    <div class="composer">
+      <input id="chat-input" placeholder="Gõ ở đây và Enter để gửi..." autocomplete="off" />
+      <button id="send-btn">Gửi</button>
+    </div>
+  </div>
+
+  <!-- RIGHT: GAME -->
+  <div class="right">
+    <div id="game-wrap">
+      <canvas id="game"></canvas>
+
+      <!-- Start overlay -->
+      <div class="start-overlay" id="start-overlay">
+        <h2>CHIẾN ĐẤU VÌ BẢN THÂN - STICKMAN PARKOUR</h2>
         <p>Nhấn <strong>Dấn thân vào đời</strong> để bắt đầu. Nhấn Space / chạm để Nhảy, giữ chạm để Slide.</p>
         <button class="big-btn" id="start-btn">Dấn thân vào đời</button>
       </div>
