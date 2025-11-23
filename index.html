@@ -1,359 +1,275 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Game Parkour Cực Đỉnh – Ultimate Version 2.0 by ahkhoidz</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Parkour Ultimate Soul Edition 4.0</title>
 <style>
-    html, body {
-        margin: 0;
-        padding: 0;
-        overflow: hidden;
-        background: #000;
-        font-family: Arial, sans-serif;
-        touch-action: none;
-    }
-    #gameCanvas {
-        display: block;
-        background: #000;
-    }
-    #uiLayer {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        color: white;
-        padding: 10px;
-        z-index: 10;
-        font-size: 20px;
-        pointer-events: none;
-        text-shadow: 0 0 10px #fff;
-    }
-    #menuStart {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100vw;
-        height: 100vh;
-        background: radial-gradient(#222, #000);
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        z-index: 20;
-        color: white;
-        text-align: center;
-    }
-    #menuStart h1 {
-        font-size: 3rem;
-        margin-bottom: 30px;
-        text-shadow: 0 0 20px #00f, 0 0 40px #0ff;
-    }
-    #menuStart button {
-        padding: 15px 40px;
-        border: none;
-        border-radius: 12px;
-        font-size: 22px;
-        cursor: pointer;
-        background: #0ff;
-        color: #000;
-        font-weight: bold;
-        box-shadow: 0 0 15px #0ff;
-        transition: 0.2s;
-    }
-    #menuStart button:hover {
-        transform: scale(1.1);
-        box-shadow: 0 0 30px #0ff;
-    }
+html,body{margin:0;padding:0;overflow:hidden;font-family:Arial,sans-serif;background:#000;touch-action:none;}
+#gameCanvas{display:block;}
+#uiLayer{position:fixed;top:10px;left:50%;transform:translateX(-50%);color:#fff;font-size:20px;z-index:10;text-shadow:0 0 8px #00f;pointer-events:none;}
+#menuStart,#menuDeath{
+    position:fixed;top:0;left:0;width:100vw;height:100vh;
+    display:flex;flex-direction:column;justify-content:center;align-items:center;
+    color:#fff;text-align:center;z-index:20;
+}
+#menuStart{background:radial-gradient(#222,#000);}
+#menuDeath{background:radial-gradient(#000,#111);}
+#menuStart h1,#menuDeath h1{font-size:3rem;margin-bottom:30px;text-shadow:0 0 20px #0ff,0 0 40px #00f;}
+.menuButton{padding:15px 40px;border:none;border-radius:12px;font-size:22px;cursor:pointer;background:#0ff;color:#000;font-weight:bold;box-shadow:0 0 15px #0ff;transition:.2s;margin:10px;}
+.menuButton:hover{transform:scale(1.1);box-shadow:0 0 30px #0ff;}
+#touchControls{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);display:flex;gap:20px;z-index:15;}
+.touchButton{width:80px;height:80px;border-radius:50%;background:rgba(0,255,255,0.3);display:flex;justify-content:center;align-items:center;font-size:24px;color:#000;user-select:none;touch-action:none;}
 </style>
 </head>
 <body>
 
-<div id="uiLayer">Điểm: <span id="score">0</span> | Highscore: <span id="highscore">0</span></div>
-<div id="menuStart">
-    <h1>GAME PARKOUR CỰC ĐỈNH</h1>
-    <button onclick="startGame()">BẮT cmn ĐẦU</button>
+<div id="uiLayer">
+Điểm: <span id="score">0</span> | Highscore: <span id="highscore">0</span> | Boss HP: <span id="bossHp">---</span> | Quest: <span id="questProgress">0/3</span>
 </div>
+
+<div id="menuStart">
+    <h1>PARKOUR ULTIMATE 4.0</h1>
+    <button class="menuButton" onclick="startGame()">BẮT ĐẦU</button>
+</div>
+
+<div id="menuDeath" style="display:none;">
+    <h1>BẠN ĐÃ THUA!</h1>
+    <p>Điểm: <span id="deathScore">0</span></p>
+    <button class="menuButton" onclick="startGame()">CHƠI LẠI</button>
+</div>
+
 <canvas id="gameCanvas"></canvas>
+
+<div id="touchControls">
+    <div class="touchButton" id="jumpBtn">↑</div>
+    <div class="touchButton" id="dashBtn">⇨</div>
+</div>
 
 <script>
 // ---------------------------
 // CANVAS & CONTROLS
 // ---------------------------
-const canvas = document.getElementById("gameCanvas");
-const ctx = canvas.getContext("2d");
-
-function resizeCanvas() {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-}
-window.addEventListener("resize", resizeCanvas);
-resizeCanvas();
-
-let keys = {};
-addEventListener("keydown", e => keys[e.key] = true);
-addEventListener("keyup", e => keys[e.key] = false);
+const canvas=document.getElementById("gameCanvas");
+const ctx=canvas.getContext("2d");
+let keys={};
+function resizeCanvas(){canvas.width=window.innerWidth;canvas.height=window.innerHeight;}
+window.addEventListener("resize",resizeCanvas);resizeCanvas();
+addEventListener("keydown",e=>keys[e.key]=true);
+addEventListener("keyup",e=>keys[e.key]=false);
+document.getElementById("jumpBtn").addEventListener("touchstart",e=>{e.preventDefault();keys["TouchJump"]=true;});
+document.getElementById("jumpBtn").addEventListener("touchend",e=>{e.preventDefault();keys["TouchJump"]=false;});
+document.getElementById("dashBtn").addEventListener("touchstart",e=>{e.preventDefault();keys["TouchDash"]=true;});
+document.getElementById("dashBtn").addEventListener("touchend",e=>{e.preventDefault();keys["TouchDash"]=false;});
 
 // ---------------------------
 // GAME STATE
 // ---------------------------
-let score = 0;
-let highscore = localStorage.getItem("parkourHighscore") || 0;
-document.getElementById("highscore").innerText = highscore;
-let gameRunning = false;
+let score=0;
+let highscore=localStorage.getItem("parkourHighscore")||0;
+document.getElementById("highscore").innerText=highscore;
+let gameRunning=false;
+let questProgress=0;
 
 // ---------------------------
 // PLAYER
 // ---------------------------
-let player = {
-    x: 150,
-    y: 0,
-    size: 45,
-    vx: 0,
-    vy: 0,
-    onGround: false,
-    dashCooldown: 0,
-    trail: []
-};
+let player={x:150,y:0,size:45,vx:5,vy:0,onGround:false,dashCooldown:0,trail:[],canJump:true,doubleJump:true};
 
 // ---------------------------
 // WORLD
 // ---------------------------
-let platforms = [];
-let spikes = [];
-let coins = [];
-let biomeColors = ["#1e90ff", "#ff00ff", "#00ffff", "#ff5500"];
-
-function generateWorld() {
-    platforms = [];
-    spikes = [];
-    coins = [];
-    let x = 0;
-    for (let i = 0; i < 300; i++) {
-        let y = 400 + Math.sin(i * 0.3) * 120;
-        let w = 280;
-        platforms.push({ x, y, w, biome: biomeColors[Math.floor(i / 80)] });
-
-        if (Math.random() < 0.25)
-            coins.push({ x: x + 120, y: y - 60, r: 20, rot: 0, collected: false });
-
-        if (Math.random() < 0.15)
-            spikes.push({ x: x + 100, y: y - 25 });
-
-        x += 350;
+let platforms=[],spikes=[],coins=[],biomeColors=["#1e90ff","#ff00ff","#00ffff","#ff5500"];
+function generateWorld(){
+    platforms=[]; spikes=[]; coins=[];
+    let x=0;
+    for(let i=0;i<300;i++){
+        let y=400+Math.sin(i*0.3)*120;
+        let w=280;
+        platforms.push({x,y,w,biome:biomeColors[Math.floor(i/80)]});
+        if(Math.random()<0.25) coins.push({x:x+120,y:y-60,r:20,rot:0,collected:false});
+        if(Math.random()<0.15) spikes.push({x:x+100,y:y-25});
+        x+=350;
     }
 }
 generateWorld();
 
 // ---------------------------
-// BOSS
+// BOSS 3 PHASE
 // ---------------------------
-let boss = {
-    x: -300,
-    y: 200,
-    size: 110,
-    speed: 1.7,
-    vy: 0,
-    jumpTimer: 0,
-    bullets: []
-};
+let boss={x:800,y:300,size:110,speed:1.7,vy:0,jumpTimer:0,bullets:[],fireCooldown:0,phase:1,hp:300,maxHp:300};
 
 // ---------------------------
-// SOUNDS
+// PARTICLES
 // ---------------------------
-const sounds = {};
-function loadSound(name, url) {
-    const audio = new Audio(url);
-    audio.volume = 0.3;
-    sounds[name] = audio;
+let particles=[];
+function spawnParticle(x,y,color,size,vx,vy,lifetime){particles.push({x,y,color,size,vx,vy,lifetime});}
+
+// ---------------------------
+// SOUNDS & MUSIC
+// ---------------------------
+const sounds={};
+function loadSound(name,url){let a=new Audio(url);a.volume=0.3;sounds[name]=a;}
+loadSound("jump","https://freesound.org/data/previews/331/331912_3248244-lq.mp3");
+loadSound("dash","https://freesound.org/data/previews/109/109662_945474-lq.mp3");
+loadSound("coin","https://freesound.org/data/previews/331/331912_3248244-lq.mp3");
+loadSound("death","https://freesound.org/data/previews/569/569880_11546212-lq.mp3");
+loadSound("bossFire","https://freesound.org/data/previews/331/331912_3248244-lq.mp3");
+const bgMusic=new Audio("https://freesound.org/data/previews/500/500000_3248244-lq.mp3");
+bgMusic.loop=true; bgMusic.volume=0.2;
+
+// ---------------------------
+// BACKGROUND PARALLAX
+// ---------------------------
+let bgLayers=[{speed:0.1,color:"#0a0a0a"},{speed:0.2,color:"#111111"},{speed:0.3,color:"#222222"},{speed:0.4,color:"#111111"},{speed:0.5,color:"#0f0f0f"}];
+function drawBackground(camX){
+    bgLayers.forEach(layer=>{
+        ctx.fillStyle=layer.color;
+        let offset=-camX*layer.speed%canvas.width;
+        ctx.fillRect(offset,0,canvas.width,canvas.height);
+        ctx.fillRect(offset+canvas.width,0,canvas.width,canvas.height);
+    });
 }
-loadSound("jump", "https://freesound.org/data/previews/331/331912_3248244-lq.mp3");
-loadSound("dash", "https://freesound.org/data/previews/109/109662_945474-lq.mp3");
-loadSound("coin", "https://freesound.org/data/previews/331/331912_3248244-lq.mp3");
-loadSound("death", "https://freesound.org/data/previews/569/569880_11546212-lq.mp3");
-loadSound("bossFire", "https://freesound.org/data/previews/331/331912_3248244-lq.mp3");
+
+// ---------------------------
+// QUEST SYSTEM
+// ---------------------------
+function updateQuest(){
+    questProgress=0;
+    if(score>=30) questProgress++;
+    if(score>=60) questProgress++;
+    if(boss.hp<200) questProgress++;
+    document.getElementById("questProgress").innerText=`${questProgress}/3`;
+}
 
 // ---------------------------
 // GAME LOOP
 // ---------------------------
-function gameLoop() {
-    if (!gameRunning) return;
+function gameLoop(){
+    if(!gameRunning) return;
     requestAnimationFrame(gameLoop);
+    ctx.clearRect(0,0,canvas.width,canvas.height);
 
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    let camX=-player.x+canvas.width/4;
+    drawBackground(camX);
 
-    // Physics
-    player.vy += 0.6; 
-    if (player.vy > 14) player.vy = 14;
-    player.x += player.vx;
-    player.y += player.vy;
-    player.vx = 5;
+    // GRAVITY
+    player.vy+=0.6;if(player.vy>14)player.vy=14;
+    player.x+=player.vx;player.y+=player.vy;
+    if(player.dashCooldown>0)player.dashCooldown--;
 
-    // Jump
-    if ((keys[" "] || keys["ArrowUp"]) && player.onGround) {
-        player.vy = -13;
-        player.onGround = false;
-        sounds.jump?.play();
+    // JUMP
+    if((keys[" "]||keys["ArrowUp"]||keys["TouchJump"]) && (player.onGround||player.doubleJump) && player.canJump){
+        player.vy=-13; player.onGround=false;
+        if(!player.onGround) player.doubleJump=false;
+        player.canJump=false; sounds.jump?.play();
+        for(let i=0;i<10;i++) spawnParticle(player.x,player.y,"#0ff",5,Math.random()*4-2,Math.random()*-4-1,30);
     }
+    if(!(keys[" "]||keys["ArrowUp"]||keys["TouchJump"]))player.canJump=true;
+    if(player.onGround)player.doubleJump=true;
 
-    // Dash
-    if (keys["Shift"] && player.dashCooldown <= 0) {
-        player.vx = 25;
-        player.dashCooldown = 60;
-        player.trail.push({ x: player.x, y: player.y, alpha: 1 });
+    // DASH
+    if((keys["Shift"]||keys["TouchDash"]) && player.dashCooldown<=0){
+        player.vx=25; player.dashCooldown=60;
+        player.trail.push({x:player.x,y:player.y,alpha:1});
         sounds.dash?.play();
-    }
-    if (player.dashCooldown > 0) player.dashCooldown--;
+        for(let i=0;i<5;i++) spawnParticle(player.x,player.y,"#0ff",3,Math.random()*6-3,Math.random()*2-1,20);
+    } else if(player.dashCooldown<=0) player.vx=5;
 
-    // Trail update
-    player.trail.forEach(t => t.alpha -= 0.05);
-    player.trail = player.trail.filter(t => t.alpha > 0);
+    // TRAIL
+    player.trail.forEach(t=>t.alpha-=0.05);
+    player.trail=player.trail.filter(t=>t.alpha>0);
 
-    // Platform collision
-    player.onGround = false;
-    for (let p of platforms) {
-        if (player.x + player.size > p.x && player.x < p.x + p.w) {
-            if (player.y + player.size > p.y && player.y + player.size < p.y + 25) {
-                player.y = p.y - player.size;
-                player.vy = 0;
-                player.onGround = true;
+    // PLATFORM COLLISION
+    player.onGround=false;
+    for(let p of platforms){
+        if(player.x+player.size>p.x && player.x<p.x+p.w){
+            if(player.y+player.size>p.y && player.y+player.size<p.y+25){
+                player.y=p.y-player.size; player.vy=0; player.onGround=true;
             }
         }
     }
 
-    // Coin collection
-    coins.forEach(c => {
-        if (!c.collected) {
-            let dx = (player.x + player.size/2) - c.x;
-            let dy = (player.y + player.size/2) - c.y;
-            if (dx*dx + dy*dy < 900) {
-                c.collected = true;
-                score += 5;
-                sounds.coin?.play();
+    // COINS
+    coins.forEach(c=>{
+        if(!c.collected){
+            let dx=(player.x+player.size/2)-c.x;
+            let dy=(player.y+player.size/2)-c.y;
+            if(dx*dx+dy*dy<900){
+                c.collected=true; score+=5; sounds.coin?.play();
+                for(let i=0;i<15;i++) spawnParticle(c.x,c.y,"#ff0",5,Math.random()*4-2,Math.random()*-4-1,40);
             }
-            c.rot += 0.15;
+            c.rot+=0.15;
         }
     });
 
-    // Spike collision
-    for (let s of spikes) {
-        if (player.x + player.size > s.x && player.x < s.x + 40) {
-            if (player.y + player.size > s.y) die();
+    // SPIKES
+    for(let s of spikes){
+        if(player.x+player.size>s.x && player.x<s.x+40){
+            if(player.y+player.size>s.y) die();
         }
     }
 
-    // Boss AI
-    boss.vy += 0.5;
-    boss.y += boss.vy;
-    if (boss.y > 400) { boss.y = 400; boss.vy = 0; }
-
+    // BOSS AI 3 PHASE
+    boss.vy+=0.5; boss.y+=boss.vy;
+    if(boss.y>400){ boss.y=400; boss.vy=0; }
     boss.jumpTimer++;
-    if (boss.jumpTimer > 120) {
-        boss.vy = -10;
-        boss.jumpTimer = 0;
-    }
+    if(boss.jumpTimer>120){ boss.vy=-10; boss.jumpTimer=0; }
+    boss.x+=boss.speed;
+    if(boss.x<player.x-600) boss.x=player.x-600;
 
-    boss.x += boss.speed;
-    if (boss.x < player.x - 600) boss.x = player.x - 600;
+    // PHASE LOGIC
+    if(boss.hp<=200) boss.phase=2;
+    if(boss.hp<=100) boss.phase=3;
 
-    // Boss bullets
-    if (Math.random() < 0.03) {
-        boss.bullets.push({ x: boss.x + 100, y: boss.y + 40 });
-        sounds.bossFire?.play();
-    }
-    boss.bullets.forEach(b => b.x += 8);
-
-    // Bullet collision
-    boss.bullets.forEach(b => {
-        if (player.x < b.x && player.x + player.size > b.x && player.y < b.y && player.y + player.size > b.y) die();
-    });
-
-    // Camera
-    let camX = -player.x + canvas.width / 4;
-
-    // DRAW
-    ctx.save();
-    ctx.translate(camX, 0);
-
-    // Platform
-    platforms.forEach(p => { ctx.fillStyle = p.biome; ctx.fillRect(p.x, p.y, p.w, 20); });
-
-    // Coins
-    coins.forEach(c => {
-        if (!c.collected) {
-            ctx.save();
-            ctx.translate(c.x, c.y);
-            ctx.rotate(c.rot);
-            ctx.fillStyle = "#ff0";
-            ctx.fillRect(-c.r/2, -c.r/2, c.r, c.r);
-            ctx.restore();
+    // BOSS FIRE
+    if(boss.fireCooldown<=0){
+        if(Math.random()<0.03){
+            boss.bullets.push({x:boss.x+100,y:boss.y+40});
+            boss.fireCooldown=60;
+            sounds.bossFire?.play();
         }
-    });
+    } else boss.fireCooldown--;
 
-    // Spikes
-    ctx.fillStyle = "#f00";
-    spikes.forEach(s => ctx.fillRect(s.x, s.y, 40, 40));
+    boss.bullets.forEach(b=>b.x+=8);
 
-    // Player trail
-    player.trail.forEach(t => {
-        ctx.fillStyle = `rgba(0,255,255,${t.alpha})`;
-        ctx.beginPath();
-        ctx.arc(t.x, t.y, player.size, 0, Math.PI*2);
-        ctx.fill();
-    });
+    // BULLET COLLISION
+    boss.bullets.forEach(b=>{ if(player.x<b.x && player.x+player.size>b.x && player.y<b.y && player.y+player.size>b.y) die(); });
 
-    // Player
-    ctx.fillStyle = "#fff";
-    ctx.beginPath();
-    ctx.arc(player.x, player.y, player.size, 0, Math.PI*2);
-    ctx.fill();
-
-    // Boss
-    ctx.fillStyle = "#ff00ff";
-    ctx.beginPath();
-    ctx.arc(boss.x, boss.y, boss.size, 0, Math.PI*2);
-    ctx.fill();
-
-    // Boss bullets
-    ctx.fillStyle = "#0ff";
-    boss.bullets.forEach(b => ctx.fillRect(b.x, b.y, 20, 6));
-
+    // DRAW WORLD
+    ctx.save(); ctx.translate(camX,0);
+    platforms.forEach(p=>{ctx.fillStyle=p.biome;ctx.fillRect(p.x,p.y,p.w,20);});
+    coins.forEach(c=>{if(!c.collected){ctx.save();ctx.translate(c.x,c.y);ctx.rotate(c.rot);ctx.fillStyle="#ff0";ctx.fillRect(-c.r/2,-c.r/2,c.r,c.r);ctx.restore();}});
+    ctx.fillStyle="#f00"; spikes.forEach(s=>ctx.fillRect(s.x,s.y,40,40));
+    player.trail.forEach(t=>{ctx.fillStyle=`rgba(0,255,255,${t.alpha})`; ctx.beginPath(); ctx.arc(t.x,t.y,player.size,0,Math.PI*2); ctx.fill();});
+    ctx.fillStyle="#fff"; ctx.beginPath(); ctx.arc(player.x,player.y,player.size,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle="#ff00ff"; ctx.beginPath(); ctx.arc(boss.x,boss.y,boss.size,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle="#0ff"; boss.bullets.forEach(b=>ctx.fillRect(b.x,b.y,20,6));
+    particles.forEach(p=>{ctx.fillStyle=p.color;ctx.beginPath();ctx.arc(p.x,p.y,p.size,0,Math.PI*2);ctx.fill();p.x+=p.vx;p.y+=p.vy;p.lifetime--;});
+    particles=particles.filter(p=>p.lifetime>0);
     ctx.restore();
 
     // UI
-    document.getElementById("score").innerText = score;
-    if(score > highscore) {
-        highscore = score;
-        document.getElementById("highscore").innerText = highscore;
-        localStorage.setItem("parkourHighscore", highscore);
-    }
+    document.getElementById("score").innerText=score;
+    document.getElementById("bossHp").innerText=boss.hp;
+    updateQuest();
+    if(score>highscore){ highscore=score; document.getElementById("highscore").innerText=highscore; localStorage.setItem("parkourHighscore",highscore);}
 }
 
 // ---------------------------
 // DEATH
 // ---------------------------
-function die() {
-    sounds.death?.play();
-    alert("DU ĐIE! Điểm: " + score);
-    resetGame();
-}
-
-function resetGame() {
-    player = { x: 150, y:0, size:45, vx:0, vy:0, onGround:false, dashCooldown:0, trail:[] };
-    boss = { x:-300, y:200, size:110, speed:1.7, vy:0, jumpTimer:0, bullets:[] };
-    score = 0;
-    generateWorld();
-    document.getElementById("menuStart").style.display = "flex";
-    gameRunning = false;
-}
+function die(){ sounds.death?.play(); gameRunning=false; document.getElementById("deathScore").innerText=score; document.getElementById("menuDeath").style.display='flex'; bgMusic.pause(); }
 
 // ---------------------------
 // START GAME
 // ---------------------------
-function startGame() {
-    document.getElementById("menuStart").style.display = "none";
-    gameRunning = true;
-    gameLoop();
+function startGame(){
+    player={x:150,y:0,size:45,vx:5,vy:0,onGround:false,dashCooldown:0,trail:[],canJump:true,doubleJump:true};
+    boss={x:800,y:300,size:110,speed:1.7,vy:0,jumpTimer:0,bullets:[],fireCooldown:0,phase:1,hp:300,maxHp:300};
+    score=0; generateWorld(); questProgress=0;
+    document.getElementById("menuStart").style.display='none'; document.getElementById("menuDeath").style.display='none';
+    gameRunning=true; bgMusic.currentTime=0; bgMusic.play(); gameLoop();
 }
 </script>
 
