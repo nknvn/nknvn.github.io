@@ -1,200 +1,225 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Web Chat + Stickman Boost–style (Parkour)</title>
-<style>
-:root{
-  --accent:#0b5cff; --bg:#0f1724; --card:#ffffff; --muted:#9aa4b2;
-}
-html,body{height:100%;margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial; background:var(--bg); color:#111;}
-.app {display:flex;height:100vh;gap:16px;padding:18px;box-sizing:border-box;}
-.left {width:360px;max-width:38%;min-width:280px;background:#f7f7f8;border-radius:12px;box-shadow:0 6px 20px rgba(2,6,23,0.4);display:flex;flex-direction:column;overflow:hidden;}
-.chat-header {padding:18px;border-bottom:1px solid rgba(2,6,23,0.06);display:flex;align-items:center;gap:12px;}
-.brand {font-weight:700;font-size:15px;}
-.welcome {color:var(--muted);font-size:13px;margin-top:6px;}
-.history {flex:1;overflow:auto;padding:12px 14px;display:flex;flex-direction:column;gap:8px;background:linear-gradient(180deg, #f7f7f8, #f3f5f7);}
-.composer {padding:12px;border-top:1px solid rgba(2,6,23,0.06);display:flex;gap:8px;align-items:center;}
-.composer input[type="text"]{flex:1;padding:10px 12px;border-radius:8px;border:1px solid rgba(2,6,23,0.08);outline:none;font-size:14px;}
-.composer button{padding:10px 14px;background:var(--accent);color:white;border:none;border-radius:8px;cursor:pointer;font-weight:600;}
-.bubble.user { align-self:flex-end; background:#e6f0ff; color:#032a7a; padding:10px 12px; border-radius:12px; max-width:85%; }
-.bubble.bot  { align-self:flex-start; background:white; color:#26303a; padding:10px 12px; border-radius:12px; max-width:85%; box-shadow:0 1px 0 rgba(2,6,23,0.04); }
-
-.right {flex:1;position:relative;border-radius:12px;overflow:hidden;background:linear-gradient(180deg,#c7f2ff,#ffe6f0);display:flex;align-items:center;justify-content:center;}
-#game-wrap {width:100%;height:100%;position:relative;display:flex;align-items:center;justify-content:center;}
-canvas { width:100%; height:100%; display:block; background:transparent; }
-
-.start-overlay, .game-over-overlay {
-  position:absolute; z-index:40; left:50%; top:50%; transform:translate(-50%,-50%);
-  background:rgba(255,255,255,0.96); padding:18px; border-radius:12px; min-width:320px;
-  box-shadow:0 20px 50px rgba(2,6,23,0.25); text-align:center;
-}
-.start-overlay h2 { margin:0 0 8px 0; font-size:20px; }
-.start-overlay p { margin:0 0 14px 0; color:#444; }
-.big-btn {
-  background:linear-gradient(180deg,#ffd05b,#f1c40f); border:none; padding:12px 20px; border-radius:12px; cursor:pointer; font-weight:700;
-  box-shadow:0 8px 20px rgba(0,0,0,0.15);
-}
-
-#jump-btn {position: absolute; z-index:50; bottom:6%; left:50%; transform:translateX(-50%); padding:18px 28px; border-radius:20px; background:#ffd05b; color:#111; font-weight:800; border:none; display:none; box-shadow:0 12px 30px rgba(2,6,23,0.2);}
-
-.hud {position:absolute; top:16px; left:16px; z-index:45; color:#fff; text-shadow:0 2px 6px rgba(0,0,0,0.4); font-weight:700; font-size:20px;}
-.name-belt {position:absolute; z-index:44; bottom:14px; left:50%; transform:translateX(-50%); background:rgba(0,0,0,0.45); color:#fff; padding:6px 10px; border-radius:10px; font-weight:700; }
-.game-over-overlay h1 { margin:0 0 8px 0; font-size:26px; }
-.game-over-overlay p { margin:0 0 12px 0; color:#222; }
-
-@media (max-width:900px){
-  .left{display:none;}
-  #jump-btn{display:block;}
-}
-</style>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Game parkour của ah khôi đz</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background: linear-gradient(#0a0a0a, #000);
+            font-family: Arial, sans-serif;
+        }
+        #titleScreen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            background: rgba(0,0,0,0.75);
+            backdrop-filter: blur(6px);
+            z-index: 10;
+            color: white;
+            text-align: center;
+        }
+        #titleScreen h1 {
+            font-size: 55px;
+            text-shadow: 0 0 15px cyan, 0 0 35px cyan;
+            margin-bottom: 25px;
+        }
+        #startBtn {
+            padding: 18px 45px;
+            font-size: 24px;
+            background: cyan;
+            color: black;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            box-shadow: 0 0 15px cyan;
+        }
+        #startBtn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 25px cyan;
+        }
+        #hud {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            color: white;
+            font-size: 24px;
+            text-shadow: 0 0 10px black;
+            z-index: 5;
+        }
+        canvas {
+            display: block;
+        }
+    </style>
 </head>
 <body>
-<div class="app">
-  <div class="left">
-    <div class="chat-header"><div><div class="brand">chatkpt</div><div class="welcome">có gì nói luôn đi</div></div></div>
-    <div class="history" id="history">
-      <div class="bubble bot" id="init-bot">Mình sẵn sàng — nhập mật khẩu để chơi: <strong>đã được anh khôi cho phép</strong></div>
+
+    <!-- HUD -->
+    <div id="hud">Điểm: 0</div>
+
+    <!-- Màn hình bắt đầu -->
+    <div id="titleScreen">
+        <h1>GAME PARKOUR CỦA AH KHÔI ĐZ</h1>
+        <button id="startBtn">BẮT ĐẦU</button>
     </div>
-    <div class="composer">
-      <input id="chat-input" placeholder="lấy tay gõ và dái bấm enterenter..." autocomplete="off" />
-      <button id="send-btn">Gửi</button>
-    </div>
-  </div>
 
-  <div class="right">
-    <div id="game-wrap">
-      <canvas id="game"></canvas>
+    <canvas id="gameCanvas"></canvas>
 
-      <div class="start-overlay" id="start-overlay">
-        <h2>CHIẾN ĐẤU VÌ BẢN THÂN - STICKMAN PARKOUR</h2>
-        <p>Nhấn <strong>Dấn thân vào đời</strong> để bắt đầu. Nhấn Space / chạm để Nhảy, giữ chạm để Slide.</p>
-        <button class="big-btn" id="start-btn">Dấn thân vào đời</button>
-      </div>
+    <script>
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+        const scoreBox = document.getElementById("hud");
 
-      <div class="hud" id="hud">Score: 0</div>
-      <div class="name-belt" id="name-belt" style="display:none">Tên: —</div>
+        function resize() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        resize();
+        window.addEventListener("resize", resize);
 
-      <div class="game-over-overlay" id="game-over" style="display:none">
-        <h1>Game Over</h1>
-        <p id="final-score">Điểm: 0</p>
-        <p id="best">Điểm cao nhất: 0</p>
-        <button class="big-btn" id="retry">Làm lại cuộc đời</button>
-      </div>
-    </div>
-  </div>
-</div>
+        // Player head
+        let head = {
+            x: 200,
+            y: 250,
+            radius: 30,
+            dy: 0,
+            onGround: false,
+            spin: 0,
+            alive: true
+        };
 
-<button id="jump-btn">Bay</button>
+        let gravity = 0.7;
+        let jumpForce = -14;
+        let speed = 7;
+        let offsetX = 0;
+        let score = 0;
 
-<script>
-// ============================ Config & Assets ============================
-const PASSWORD = "đã được anh khôi cho phép";
-const canvas = document.getElementById("game");
-const ctx = canvas.getContext("2d");
-const startOverlay = document.getElementById("start-overlay");
-const startBtn = document.getElementById("start-btn");
-const jumpBtn = document.getElementById("jump-btn");
-const hud = document.getElementById("hud");
-const nameBelt = document.getElementById("name-belt");
-const gameOverOverlay = document.getElementById("game-over");
-const finalScoreText = document.getElementById("final-score");
-const bestText = document.getElementById("best");
-const retryBtn = document.getElementById("retry");
+        // Platforms
+        let platforms = [];
+        for (let i = 0; i < 120; i++) {
+            platforms.push({
+                x: i * 300,
+                y: 350 + Math.sin(i * 0.5) * 100,
+                w: 260,
+                h: 25
+            });
+        }
 
-let bgImg = new Image(); bgImg.src = "bg.jpg";
+        // Traps (gai)
+        let traps = [];
+        for (let i = 5; i < 100; i += 7) {
+            traps.push({
+                x: i * 300 + 150,
+                y: 340 + Math.sin(i * 0.5) * 100 - 30,
+                size: 30
+            });
+        }
 
-// ============================ WebAudio ============================
-const AudioCtx = window.AudioContext || window.webkitAudioContext;
-const audioCtx = new AudioCtx();
-function playBeep(freq=440,time=0.08,type='sine',gain=0.12){
-  const o=audioCtx.createOscillator(), g=audioCtx.createGain(); o.type=type;o.frequency.value=freq; g.gain.value=gain;
-  o.connect(g); g.connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime+time);
-}
-function playJump(){ playBeep(420,0.09,'triangle',0.11);}
-function playDoubleJump(){ playBeep(520,0.08,'sine',0.12); setTimeout(()=>playBeep(720,0.06,'sine',0.08),70);}
-function playSlide(){ playBeep(1000,0.09,'square',0.14);}
-function playCoin(){ playBeep(1200,0.06,'sine',0.09); setTimeout(()=>playBeep(1500,0.05,'sine',0.07),60);}
-function playDie(){ playBeep(80,0.15,'triangle',0.2);}
-function playCheckpoint(){ playBeep(800,0.12,'sine',0.14);}
+        // Particles khi chết
+        let particles = [];
 
-// ============================ Game State ============================
-let DPR = window.devicePixelRatio || 1;
-function resize(){ 
-  DPR=window.devicePixelRatio||1; const rect=canvas.getBoundingClientRect();
-  canvas.width=Math.floor(rect.width*DPR); canvas.height=Math.floor(rect.height*DPR);
-  ctx.setTransform(DPR,0,0,DPR,0,0);
-}
-window.addEventListener('resize',()=>{ resize(); renderOnce(); }); resize();
+        let keys = {};
+        document.addEventListener("keydown", (e) => keys[e.key] = true);
+        document.addEventListener("keyup", (e) => keys[e.key] = false);
 
-const PLAYER = { x:140,y:100,w:28,h:48,vy:0,onGround:false,jumps:0,sliding:false,color:'#111'};
-let platforms=[], obstacles=[], items=[], scroll=0, speed=3.2, gravity=0.76, jumpPower=-13, doubleJumpPower=-11, maxJumps=2;
-let score=0, best=parseInt(localStorage.getItem('sb_best')||'0',10);
-bestText.innerText='Điểm cao nhất: '+best;
-let alive=false,lastCheckpointX=0;
-const PLATFORM_MIN_W=60, PLATFORM_MAX_W=220, GAP_MIN=90, GAP_MAX=180;
-const NAMES=["Hùng","Hoàng","Việt","Tiến","Tín","Khoa","Sáng","Hậu","Duy","Phúc","Điền","Trung","Huy","Thắng","Quyền","Nguyên"];
-let nameIndex=0;
-function rand(a,b){return Math.floor(Math.random()*(b-a+1))+a;}
+        function startGame() {
+            document.getElementById("titleScreen").style.display = "none";
+            gameLoop();
+        }
+        document.getElementById("startBtn").onclick = startGame;
 
-// ============================ Input ============================
-let keys={};
-window.addEventListener('keydown',(e)=>{ keys[e.code]=true; if(!alive)return; if(e.code==='Space')handleJump(); if(e.code==='ArrowDown')handleSlideStart(); });
-window.addEventListener('keyup',(e)=>{ keys[e.code]=false; if(e.code==='ArrowDown')handleSlideEnd(); });
-canvas.addEventListener('touchstart',(e)=>{ e.preventDefault(); if(!alive)return; const t=e.touches[0]; const rect=canvas.getBoundingClientRect(); const x=t.clientX-rect.left; if(x<rect.width*0.6){handleJump();}else{handleSlideStart();} });
-canvas.addEventListener('touchend',(e)=>{ handleSlideEnd(); });
+        function addParticles(x, y) {
+            for (let i = 0; i < 25; i++) {
+                particles.push({
+                    x, y,
+                    dx: (Math.random() - 0.5) * 10,
+                    dy: (Math.random() - 0.5) * 10,
+                    life: 50
+                });
+            }
+        }
 
-function handleJump(){ if(!alive)return; if(PLAYER.jumps<maxJumps){ if(PLAYER.jumps===0){PLAYER.vy=jumpPower;playJump();}else{PLAYER.vy=doubleJumpPower;playDoubleJump();} PLAYER.jumps++; PLAYER.onGround=false; } }
-function handleSlideStart(){ if(!alive)return; PLAYER.sliding=true; playSlide();}
-function handleSlideEnd(){ PLAYER.sliding=false;}
+        function gameLoop() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-// ============================ UI Buttons ============================
-startBtn.addEventListener('click',()=>{ startOverlay.style.display='none'; startGame(); if(audioCtx.state==='suspended') audioCtx.resume(); });
-jumpBtn.addEventListener('click',()=>{ if(alive)handleJump(); });
-retryBtn.addEventListener('click',()=>{ startGame(); });
+            if (head.alive) {
+                if (keys["ArrowRight"] || keys["d"]) offsetX += speed;
+                if (keys["ArrowLeft"] || keys["a"]) offsetX -= speed;
 
-// ============================ Chat ============================
-const historyEl=document.getElementById('history');
-const input=document.getElementById('chat-input');
-const sendBtn=document.getElementById('send-btn');
-sendBtn.addEventListener('click',onSend);
-input.addEventListener('keydown',(e)=>{if(e.key==='Enter'){onSend();}});
+                if ((keys["ArrowUp"] || keys["w"] || keys[" "]) && head.onGround) {
+                    head.dy = jumpForce;
+                    head.onGround = false;
+                }
 
-function appendBot(text){const b=document.createElement('div');b.className='bubble bot';b.innerText=text;historyEl.appendChild(b);historyEl.scrollTop=historyEl.scrollHeight;}
-function appendUser(text){const u=document.createElement('div');u.className='bubble user';u.innerText=text;historyEl.appendChild(u);historyEl.scrollTop=historyEl.scrollHeight;}
+                head.dy += gravity;
+                head.y += head.dy;
+                head.spin += 0.2;
 
-function onSend(){
-  const txt=input.value.trim(); if(!txt)return;
-  appendUser(txt);
-  if(txt.toLowerCase()===PASSWORD.toLowerCase()){
-    appendBot('Mật khẩu hợp lệ — chuẩn bị chuyển sang game.');
-    document.querySelector('.left').style.display='none';
-    startOverlay.style.display='block';
-  } else {
-    if(txt.toLowerCase().includes('game')) appendBot('Nhập mật khẩu để mở game, hoặc hỏi về điều khiển: "space để nhảy, xuống để trượt".');
-    else appendBot('Mình đã nhận — nhập mật khẩu để vào game.');
-  }
-  input.value='';
-}
+                head.onGround = false;
+                for (let p of platforms) {
+                    let px = p.x - offsetX;
+                    if (head.x + head.radius > px && head.x - head.radius < px + p.w && head.y + head.radius > p.y && head.y + head.radius < p.y + p.h && head.dy > 0) {
+                        head.y = p.y - head.radius;
+                        head.dy = 0;
+                        head.onGround = true;
+                    }
+                }
 
-// ============================ Render preview ============================
-function renderOnce(){ render(); }
-function render(){ 
-  const cw=canvas.width/DPR,ch=canvas.height/DPR;
-  const g=ctx.createLinearGradient(0,0,cw,ch); g.addColorStop(0,'#a8edea'); g.addColorStop(1,'#fed6e3');
-  ctx.fillStyle=g; ctx.fillRect(0,0,cw,ch);
-  ctx.fillStyle='#5a3c2b'; ctx.fillRect(120,ch-140,220,20);
-  ctx.fillStyle='#111'; ctx.beginPath(); ctx.arc(160,ch-180,10,0,Math.PI*2); ctx.fill();
-  ctx.fillStyle='#fff'; ctx.font='14px Arial'; ctx.fillText('Stickman Parkour preview',14,28);
-}
+                // Va chạm gai
+                for (let t of traps) {
+                    let tx = t.x - offsetX;
+                    if (Math.abs(head.x - tx) < t.size && Math.abs(head.y - t.y) < t.size) {
+                        head.alive = false;
+                        addParticles(head.x, head.y);
+                    }
+                }
 
-// ============================ Unlock audio on click ============================
-document.addEventListener('click',()=>{if(audioCtx && audioCtx.state==='suspended')audioCtx.resume();},{once:true});
+                score = Math.floor(offsetX / 10);
+                scoreBox.textContent = "Điểm: " + score;
+            }
 
-// ============================ Game logic ============================
-// Tất cả hàm: startGame(), spawnInitialPlatforms(), spawnNextIfNeeded(), doGameOver(), gameLoop(), renderPlayer(), collision, items…
-// Vẫn giữ nguyên đầy đủ từ bản gốc
-</script>
+            // Draw platforms
+            ctx.fillStyle = "cyan";
+            for (let p of platforms) ctx.fillRect(p.x - offsetX, p.y, p.w, p.h);
+
+            // Draw traps
+            ctx.fillStyle = "red";
+            traps.forEach(t => ctx.fillRect(t.x - offsetX - 15, t.y - 15, 30, 30));
+
+            // Draw player
+            if (head.alive) {
+                ctx.save();
+                ctx.translate(head.x, head.y);
+                ctx.rotate(head.spin);
+                ctx.fillStyle = "white";
+                ctx.beginPath();
+                ctx.arc(0, 0, head.radius, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            }
+
+            // Particles
+            ctx.fillStyle = "yellow";
+            particles.forEach((p, i) => {
+                p.x += p.dx;
+                p.y += p.dy;
+                p.life--;
+                ctx.fillRect(p.x, p.y, 5, 5);
+                if (p.life <= 0) particles.splice(i, 1);
+            });
+
+            requestAnimationFrame(gameLoop);
+        }
+    </script>
+
 </body>
 </html>
