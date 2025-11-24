@@ -3,275 +3,508 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Parkour Ultimate Soul Edition 4.0</title>
+<title>Game Parkour Full</title>
 <style>
-html,body{margin:0;padding:0;overflow:hidden;font-family:Arial,sans-serif;background:#000;touch-action:none;}
-#gameCanvas{display:block;}
-#uiLayer{position:fixed;top:10px;left:50%;transform:translateX(-50%);color:#fff;font-size:20px;z-index:10;text-shadow:0 0 8px #00f;pointer-events:none;}
-#menuStart,#menuDeath{
-    position:fixed;top:0;left:0;width:100vw;height:100vh;
-    display:flex;flex-direction:column;justify-content:center;align-items:center;
-    color:#fff;text-align:center;z-index:20;
+  html, body {margin:0; padding:0; overflow:hidden; background:#000;}
+  canvas {display:block;}
+</style>
+</head>
+<body>
+<canvas id="gameCanvas" width="800" height="500"></canvas>
+
+<script>
+// ==================== PHẦN 1 ====================
+// <!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PARKOUR ULTIMATE SOUL — GOD MODE 6.0 VERBOSE 2600+</title>
+
+<!-- =====================
+     GLOBAL CSS STYLES
+===================== -->
+<style>
+/* RESET MARGIN/PADDING/OVERFLOW */
+html, body {
+    margin: 0;               /* loại bỏ margin mặc định */
+    padding: 0;              /* loại bỏ padding mặc định */
+    overflow: hidden;        /* ẩn thanh cuộn */
+    font-family: 'Press Start 2P', monospace; /* font retro neon */
+    background: #000;        /* nền đen */
+    touch-action: none;      /* disable gesture zoom on mobile */
 }
-#menuStart{background:radial-gradient(#222,#000);}
-#menuDeath{background:radial-gradient(#000,#111);}
-#menuStart h1,#menuDeath h1{font-size:3rem;margin-bottom:30px;text-shadow:0 0 20px #0ff,0 0 40px #00f;}
-.menuButton{padding:15px 40px;border:none;border-radius:12px;font-size:22px;cursor:pointer;background:#0ff;color:#000;font-weight:bold;box-shadow:0 0 15px #0ff;transition:.2s;margin:10px;}
-.menuButton:hover{transform:scale(1.1);box-shadow:0 0 30px #0ff;}
-#touchControls{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);display:flex;gap:20px;z-index:15;}
-.touchButton{width:80px;height:80px;border-radius:50%;background:rgba(0,255,255,0.3);display:flex;justify-content:center;align-items:center;font-size:24px;color:#000;user-select:none;touch-action:none;}
+
+/* CANVAS GAME */
+canvas#gameCanvas {
+    display: block;          /* loại bỏ khoảng trắng */
+    background: #000;        /* nền đen */
+}
+
+/* UI LAYER */
+#uiLayer {
+    position: fixed;          /* luôn ở trên canvas */
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;     /* cho phép click qua canvas */
+    z-index: 100;             /* trên tất cả */
+}
+
+/* SCREENS: MENU, DEATH, SHOP, BOSS INTRO */
+#menuScreen, #deathScreen, #shopScreen, #bossIntro {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;            /* dùng flexbox */
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;   /* stacked vertically */
+    background: rgba(0,0,0,0.85);
+    color: #0ff;
+    font-size: 2em;
+    z-index: 100;
+    transition: opacity 0.5s; /* fade */
+    opacity: 1;
+}
+
+/* HIDDEN SCREENS */
+#menuScreen.hide,
+#deathScreen.hide,
+#shopScreen.hide,
+#bossIntro.hide {
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* BUTTON STYLE */
+button.uiButton {
+    margin: 10px;
+    padding: 15px 30px;
+    background: #0ff;
+    color: #000;
+    border: none;
+    border-radius: 10px;
+    font-size: 1em;
+    transition: 0.2s;
+}
+
+/* HOVER EFFECT */
+button.uiButton:hover {
+    background: #0aa;
+    color: #fff;
+}
+
+/* MOBILE CONTROLS */
+#mobileControls {
+    position: fixed;
+    bottom: 20px;
+    width: 100%;
+    display: flex;
+    justify-content: space-around;
+    z-index: 99;
+}
+
+.mobileBtn {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: rgba(0,255,255,0.3);
+    border: 2px solid #0ff;
+    touch-action: none;
+}
+
+.mobileBtn:active {
+    background: rgba(0,255,255,0.7);
+}
+
+/* BIOME OVERLAY */
+#biomeOverlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    mix-blend-mode: overlay;
+    pointer-events: none;
+}
+
+/* PARTICLE SYSTEM */
+.particle {
+    position: absolute;
+    pointer-events: none;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: #fff;
+}
+
+/* FONT IMPORT */
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
+/* BODY FONT */
+body {
+    font-family: 'Press Start 2P', monospace;
+}
+
+/* HIDE AUDIO ELEMENTS */
+audio {
+    display: none;
+}
+
 </style>
 </head>
 <body>
 
-<div id="uiLayer">
-Điểm: <span id="score">0</span> | Highscore: <span id="highscore">0</span> | Boss HP: <span id="bossHp">---</span> | Quest: <span id="questProgress">0/3</span>
-</div>
-
-<div id="menuStart">
-    <h1>PARKOUR ULTIMATE 4.0</h1>
-    <button class="menuButton" onclick="startGame()">BẮT ĐẦU</button>
-</div>
-
-<div id="menuDeath" style="display:none;">
-    <h1>BẠN ĐÃ THUA!</h1>
-    <p>Điểm: <span id="deathScore">0</span></p>
-    <button class="menuButton" onclick="startGame()">CHƠI LẠI</button>
-</div>
-
+<!-- =====================
+     CANVAS FOR GAME
+===================== -->
 <canvas id="gameCanvas"></canvas>
 
-<div id="touchControls">
-    <div class="touchButton" id="jumpBtn">↑</div>
-    <div class="touchButton" id="dashBtn">⇨</div>
+<!-- =====================
+     UI LAYER
+===================== -->
+<div id="uiLayer">
+
+    <!-- MENU SCREEN -->
+    <div id="menuScreen">
+        <div>PARKOUR ULTIMATE SOUL<br>GOD MODE 6.0 VERBOSE</div>
+        <button class="uiButton" onclick="startGame()">START</button>
+    </div>
+
+    <!-- DEATH SCREEN -->
+    <div id="deathScreen" class="hide">
+        <div>YOU DIED</div>
+        <button class="uiButton" onclick="restartGame()">RETRY</button>
+    </div>
+
+    <!-- SHOP SCREEN -->
+    <div id="shopScreen" class="hide">
+        <div>SHOP</div>
+        <button class="uiButton" onclick="buyUpgrade('speed')">SPEED</button>
+        <button class="uiButton" onclick="buyUpgrade('jump')">JUMP</button>
+        <button class="uiButton" onclick="buyUpgrade('dash')">DASH</button>
+        <button class="uiButton" onclick="buyUpgrade('shield')">SHIELD</button>
+        <button class="uiButton" onclick="buyUpgrade('revive')">REVIVE</button>
+        <button class="uiButton" onclick="buyUpgrade('skin')">SKIN</button>
+        <button class="uiButton" onclick="closeShop()">BACK</button>
+    </div>
+
+    <!-- BOSS INTRO SCREEN -->
+    <div id="bossIntro" class="hide">
+        <div id="bossName">BOSS</div>
+    </div>
+
+    <!-- MOBILE CONTROLS -->
+    <div id="mobileControls">
+        <div class="mobileBtn" id="leftBtn">◀</div>
+        <div class="mobileBtn" id="jumpBtn">▲</div>
+        <div class="mobileBtn" id="dashBtn">▶</div>
+    </div>
+
+    <!-- BIOME OVERLAY -->
+    <div id="biomeOverlay"></div>
+
 </div>
 
+<!-- =====================
+     AUDIO ELEMENTS
+===================== -->
+<audio id="bgMusic" loop src="bgm.mp3"></audio>
+<audio id="jumpSnd" src="jump.wav"></audio>
+<audio id="dashSnd" src="dash.wav"></audio>
+<audio id="hitSnd" src="hit.wav"></audio>
+<audio id="bossSnd" src="boss.wav"></audio>
+<audio id="coinSnd" src="coin.wav"></audio>
+
 <script>
-// ---------------------------
-// CANVAS & CONTROLS
-// ---------------------------
-const canvas=document.getElementById("gameCanvas");
-const ctx=canvas.getContext("2d");
-let keys={};
-function resizeCanvas(){canvas.width=window.innerWidth;canvas.height=window.innerHeight;}
-window.addEventListener("resize",resizeCanvas);resizeCanvas();
-addEventListener("keydown",e=>keys[e.key]=true);
-addEventListener("keyup",e=>keys[e.key]=false);
-document.getElementById("jumpBtn").addEventListener("touchstart",e=>{e.preventDefault();keys["TouchJump"]=true;});
-document.getElementById("jumpBtn").addEventListener("touchend",e=>{e.preventDefault();keys["TouchJump"]=false;});
-document.getElementById("dashBtn").addEventListener("touchstart",e=>{e.preventDefault();keys["TouchDash"]=true;});
-document.getElementById("dashBtn").addEventListener("touchend",e=>{e.preventDefault();keys["TouchDash"]=false;});
+// =====================
+/* GOD MODE 6.0 VERBOSE SCRIPT
+   PHẦN 1: GLOBAL VARIABLES
+===================== */
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
 
-// ---------------------------
-// GAME STATE
-// ---------------------------
-let score=0;
-let highscore=localStorage.getItem("parkourHighscore")||0;
-document.getElementById("highscore").innerText=highscore;
-let gameRunning=false;
-let questProgress=0;
+/* CANVAS SIZE */
+let width = canvas.width = window.innerWidth;
+let height = canvas.height = window.innerHeight;
 
-// ---------------------------
-// PLAYER
-// ---------------------------
-let player={x:150,y:0,size:45,vx:5,vy:0,onGround:false,dashCooldown:0,trail:[],canJump:true,doubleJump:true};
+/* GAME STATE */
+let gameState = 'menu';  // menu, playing, death, shop
+let keys = {};            // object lưu key đang nhấn
+let player = {};          // player object
+let platforms = [];       // mảng platforms
+let enemies = [];         // mảng enemies
+let particles = [];       // mảng particle
+let biomes = [];          // mảng biome
+let currentBiome = 0;     // biome hiện tại
+let camera = {x:0, y:0};  // camera offset
+let upgrades = {speed:0, jump:0, dash:0, shield:false, revive:0, skin:0};  // upgrades
+let audio = {};           // audio objects
+let lastTime = 0;         // thời gian loop trước
+let bosses = [];          // mảng boss
+let boss = null;          // active boss
 
-// ---------------------------
-// WORLD
-// ---------------------------
-let platforms=[],spikes=[],coins=[],biomeColors=["#1e90ff","#ff00ff","#00ffff","#ff5500"];
-function generateWorld(){
-    platforms=[]; spikes=[]; coins=[];
-    let x=0;
-    for(let i=0;i<300;i++){
-        let y=400+Math.sin(i*0.3)*120;
-        let w=280;
-        platforms.push({x,y,w,biome:biomeColors[Math.floor(i/80)]});
-        if(Math.random()<0.25) coins.push({x:x+120,y:y-60,r:20,rot:0,collected:false});
-        if(Math.random()<0.15) spikes.push({x:x+100,y:y-25});
-        x+=350;
-    }
+
+
+// ==================== PHẦN 2 ====================
+// Biến và trạng thái riêng cho phần 2
+let part2Player = {x: 100, y: 300, width: 50, height: 50, color: 'blue', vy: 0, onGround: true};
+let part2Platforms = [];
+let part2Gravity = 0.8;
+
+// Khởi tạo các platforms
+function part2Init() {
+    part2Platforms = [
+        {x: 0, y: 400, width: 800, height: 20},
+        {x: 150, y: 300, width: 100, height: 20},
+        {x: 350, y: 250, width: 100, height: 20},
+        {x: 550, y: 200, width: 100, height: 20},
+    ];
 }
-generateWorld();
 
-// ---------------------------
-// BOSS 3 PHASE
-// ---------------------------
-let boss={x:800,y:300,size:110,speed:1.7,vy:0,jumpTimer:0,bullets:[],fireCooldown:0,phase:1,hp:300,maxHp:300};
+// Cập nhật trạng thái player
+function part2Update() {
+    if (!part2Player.onGround) part2Player.vy += part2Gravity;
+    part2Player.y += part2Player.vy;
 
-// ---------------------------
-// PARTICLES
-// ---------------------------
-let particles=[];
-function spawnParticle(x,y,color,size,vx,vy,lifetime){particles.push({x,y,color,size,vx,vy,lifetime});}
+    part2Player.onGround = false;
+    part2Platforms.forEach(p => {
+        if (part2Player.x < p.x + p.width &&
+            part2Player.x + part2Player.width > p.x &&
+            part2Player.y + part2Player.height > p.y &&
+            part2Player.y + part2Player.height < p.y + p.height + 10 &&
+            part2Player.vy >= 0) {
+            part2Player.y = p.y - part2Player.height;
+            part2Player.vy = 0;
+            part2Player.onGround = true;
+        }
+    });
+}
 
-// ---------------------------
-// SOUNDS & MUSIC
-// ---------------------------
-const sounds={};
-function loadSound(name,url){let a=new Audio(url);a.volume=0.3;sounds[name]=a;}
-loadSound("jump","https://freesound.org/data/previews/331/331912_3248244-lq.mp3");
-loadSound("dash","https://freesound.org/data/previews/109/109662_945474-lq.mp3");
-loadSound("coin","https://freesound.org/data/previews/331/331912_3248244-lq.mp3");
-loadSound("death","https://freesound.org/data/previews/569/569880_11546212-lq.mp3");
-loadSound("bossFire","https://freesound.org/data/previews/331/331912_3248244-lq.mp3");
-const bgMusic=new Audio("https://freesound.org/data/previews/500/500000_3248244-lq.mp3");
-bgMusic.loop=true; bgMusic.volume=0.2;
+// Vẽ phần 2
+function part2Draw(ctx) {
+    ctx.fillStyle = part2Player.color;
+    ctx.fillRect(part2Player.x, part2Player.y, part2Player.width, part2Player.height);
 
-// ---------------------------
-// BACKGROUND PARALLAX
-// ---------------------------
-let bgLayers=[{speed:0.1,color:"#0a0a0a"},{speed:0.2,color:"#111111"},{speed:0.3,color:"#222222"},{speed:0.4,color:"#111111"},{speed:0.5,color:"#0f0f0f"}];
-function drawBackground(camX){
-    bgLayers.forEach(layer=>{
-        ctx.fillStyle=layer.color;
-        let offset=-camX*layer.speed%canvas.width;
-        ctx.fillRect(offset,0,canvas.width,canvas.height);
-        ctx.fillRect(offset+canvas.width,0,canvas.width,canvas.height);
+    ctx.fillStyle = 'green';
+    part2Platforms.forEach(p => {
+        ctx.fillRect(p.x, p.y, p.width, p.height);
     });
 }
 
-// ---------------------------
-// QUEST SYSTEM
-// ---------------------------
-function updateQuest(){
-    questProgress=0;
-    if(score>=30) questProgress++;
-    if(score>=60) questProgress++;
-    if(boss.hp<200) questProgress++;
-    document.getElementById("questProgress").innerText=`${questProgress}/3`;
+// Xử lý phím (phần 2 riêng)
+function part2KeyDown(e) {
+    if (e.code === 'ArrowLeft') part2Player.x -= 10;
+    if (e.code === 'ArrowRight') part2Player.x += 10;
+    if (e.code === 'Space' && part2Player.onGround) {
+        part2Player.vy = -15;
+        part2Player.onGround = false;
+    }
 }
 
-// ---------------------------
-// GAME LOOP
-// ---------------------------
-function gameLoop(){
-    if(!gameRunning) return;
-    requestAnimationFrame(gameLoop);
-    ctx.clearRect(0,0,canvas.width,canvas.height);
+function part2KeyUp(e) {}
 
-    let camX=-player.x+canvas.width/4;
-    drawBackground(camX);
+// Gọi init một lần
+part2Init();
 
-    // GRAVITY
-    player.vy+=0.6;if(player.vy>14)player.vy=14;
-    player.x+=player.vx;player.y+=player.vy;
-    if(player.dashCooldown>0)player.dashCooldown--;
-
-    // JUMP
-    if((keys[" "]||keys["ArrowUp"]||keys["TouchJump"]) && (player.onGround||player.doubleJump) && player.canJump){
-        player.vy=-13; player.onGround=false;
-        if(!player.onGround) player.doubleJump=false;
-        player.canJump=false; sounds.jump?.play();
-        for(let i=0;i<10;i++) spawnParticle(player.x,player.y,"#0ff",5,Math.random()*4-2,Math.random()*-4-1,30);
-    }
-    if(!(keys[" "]||keys["ArrowUp"]||keys["TouchJump"]))player.canJump=true;
-    if(player.onGround)player.doubleJump=true;
-
-    // DASH
-    if((keys["Shift"]||keys["TouchDash"]) && player.dashCooldown<=0){
-        player.vx=25; player.dashCooldown=60;
-        player.trail.push({x:player.x,y:player.y,alpha:1});
-        sounds.dash?.play();
-        for(let i=0;i<5;i++) spawnParticle(player.x,player.y,"#0ff",3,Math.random()*6-3,Math.random()*2-1,20);
-    } else if(player.dashCooldown<=0) player.vx=5;
-
-    // TRAIL
-    player.trail.forEach(t=>t.alpha-=0.05);
-    player.trail=player.trail.filter(t=>t.alpha>0);
-
-    // PLATFORM COLLISION
-    player.onGround=false;
-    for(let p of platforms){
-        if(player.x+player.size>p.x && player.x<p.x+p.w){
-            if(player.y+player.size>p.y && player.y+player.size<p.y+25){
-                player.y=p.y-player.size; player.vy=0; player.onGround=true;
-            }
-        }
-    }
-
-    // COINS
-    coins.forEach(c=>{
-        if(!c.collected){
-            let dx=(player.x+player.size/2)-c.x;
-            let dy=(player.y+player.size/2)-c.y;
-            if(dx*dx+dy*dy<900){
-                c.collected=true; score+=5; sounds.coin?.play();
-                for(let i=0;i<15;i++) spawnParticle(c.x,c.y,"#ff0",5,Math.random()*4-2,Math.random()*-4-1,40);
-            }
-            c.rot+=0.15;
-        }
-    });
-
-    // SPIKES
-    for(let s of spikes){
-        if(player.x+player.size>s.x && player.x<s.x+40){
-            if(player.y+player.size>s.y) die();
-        }
-    }
-
-    // BOSS AI 3 PHASE
-    boss.vy+=0.5; boss.y+=boss.vy;
-    if(boss.y>400){ boss.y=400; boss.vy=0; }
-    boss.jumpTimer++;
-    if(boss.jumpTimer>120){ boss.vy=-10; boss.jumpTimer=0; }
-    boss.x+=boss.speed;
-    if(boss.x<player.x-600) boss.x=player.x-600;
-
-    // PHASE LOGIC
-    if(boss.hp<=200) boss.phase=2;
-    if(boss.hp<=100) boss.phase=3;
-
-    // BOSS FIRE
-    if(boss.fireCooldown<=0){
-        if(Math.random()<0.03){
-            boss.bullets.push({x:boss.x+100,y:boss.y+40});
-            boss.fireCooldown=60;
-            sounds.bossFire?.play();
-        }
-    } else boss.fireCooldown--;
-
-    boss.bullets.forEach(b=>b.x+=8);
-
-    // BULLET COLLISION
-    boss.bullets.forEach(b=>{ if(player.x<b.x && player.x+player.size>b.x && player.y<b.y && player.y+player.size>b.y) die(); });
-
-    // DRAW WORLD
-    ctx.save(); ctx.translate(camX,0);
-    platforms.forEach(p=>{ctx.fillStyle=p.biome;ctx.fillRect(p.x,p.y,p.w,20);});
-    coins.forEach(c=>{if(!c.collected){ctx.save();ctx.translate(c.x,c.y);ctx.rotate(c.rot);ctx.fillStyle="#ff0";ctx.fillRect(-c.r/2,-c.r/2,c.r,c.r);ctx.restore();}});
-    ctx.fillStyle="#f00"; spikes.forEach(s=>ctx.fillRect(s.x,s.y,40,40));
-    player.trail.forEach(t=>{ctx.fillStyle=`rgba(0,255,255,${t.alpha})`; ctx.beginPath(); ctx.arc(t.x,t.y,player.size,0,Math.PI*2); ctx.fill();});
-    ctx.fillStyle="#fff"; ctx.beginPath(); ctx.arc(player.x,player.y,player.size,0,Math.PI*2); ctx.fill();
-    ctx.fillStyle="#ff00ff"; ctx.beginPath(); ctx.arc(boss.x,boss.y,boss.size,0,Math.PI*2); ctx.fill();
-    ctx.fillStyle="#0ff"; boss.bullets.forEach(b=>ctx.fillRect(b.x,b.y,20,6));
-    particles.forEach(p=>{ctx.fillStyle=p.color;ctx.beginPath();ctx.arc(p.x,p.y,p.size,0,Math.PI*2);ctx.fill();p.x+=p.vx;p.y+=p.vy;p.lifetime--;});
-    particles=particles.filter(p=>p.lifetime>0);
-    ctx.restore();
-
-    // UI
-    document.getElementById("score").innerText=score;
-    document.getElementById("bossHp").innerText=boss.hp;
-    updateQuest();
-    if(score>highscore){ highscore=score; document.getElementById("highscore").innerText=highscore; localStorage.setItem("parkourHighscore",highscore);}
+// Hàm gọi trong main loop
+function part2Loop(ctx) {
+    part2Update();
+    part2Draw(ctx);
 }
 
-// ---------------------------
-// DEATH
-// ---------------------------
-function die(){ sounds.death?.play(); gameRunning=false; document.getElementById("deathScore").innerText=score; document.getElementById("menuDeath").style.display='flex'; bgMusic.pause(); }
+// Thêm event listener (chỉ thêm 1 lần)
+window.addEventListener('keydown', part2KeyDown);
+window.addEventListener('keyup', part2KeyUp);
 
-// ---------------------------
-// START GAME
-// ---------------------------
-function startGame(){
-    player={x:150,y:0,size:45,vx:5,vy:0,onGround:false,dashCooldown:0,trail:[],canJump:true,doubleJump:true};
-    boss={x:800,y:300,size:110,speed:1.7,vy:0,jumpTimer:0,bullets:[],fireCooldown:0,phase:1,hp:300,maxHp:300};
-    score=0; generateWorld(); questProgress=0;
-    document.getElementById("menuStart").style.display='none'; document.getElementById("menuDeath").style.display='none';
-    gameRunning=true; bgMusic.currentTime=0; bgMusic.play(); gameLoop();
+// ==================== MAIN LOOP ====================
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+
+function mainLoop() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    // Gọi các phần
+    // phần 1: mainLoopPart1(ctx);
+    part2Loop(ctx);
+
+    requestAnimationFrame(mainLoop);
 }
+
+mainLoop();
 </script>
 
 </body>
 </html>
+// ==================== PHẦN 3: FULL CHUẨN HÓA ====================
+
+// Biến và trạng thái riêng cho phần 3
+let part3Obstacles = [];
+let part3Speed = 3;
+
+// Khởi tạo obstacles
+function part3Init() {
+    for (let i = 0; i < 5; i++) {
+        part3Obstacles.push({x: i * 200 + 800, y: 350, width: 30, height: 30});
+    }
+}
+
+// Cập nhật obstacles
+function part3Update() {
+    part3Obstacles.forEach(obs => {
+        obs.x -= part3Speed;
+        if (obs.x + obs.width < 0) obs.x = 800 + Math.random() * 200;
+    });
+}
+
+// Vẽ obstacles
+function part3Draw(ctx) {
+    ctx.fillStyle = 'orange';
+    part3Obstacles.forEach(obs => {
+        ctx.fillRect(obs.x, obs.y, obs.width, obs.height);
+    });
+}
+
+// Kiểm tra va chạm với player của phần 2
+function part3CheckCollision() {
+    part3Obstacles.forEach(obs => {
+        if (part2Player.x < obs.x + obs.width &&
+            part2Player.x + part2Player.width > obs.x &&
+            part2Player.y < obs.y + obs.height &&
+            part2Player.y + part2Player.height > obs.y) {
+            // Va chạm: reset player về đầu
+            part2Player.x = 100;
+            part2Player.y = 300;
+            part2Player.vy = 0;
+        }
+    });
+}
+
+// Gọi init một lần
+part3Init();
+
+// Hàm gọi trong main loop
+function part3Loop(ctx) {
+    part3Update();
+    part3CheckCollision();
+    part3Draw(ctx);
+}
+// ==================== PHẦN 4: FULL CHUẨN HÓA ====================
+
+// Biến và trạng thái riêng cho phần 4
+let part4Coins = [];
+let part4Collected = 0;
+
+// Khởi tạo coins
+function part4Init() {
+    for (let i = 0; i < 5; i++) {
+        part4Coins.push({x: i * 150 + 200, y: 270, width: 20, height: 20, collected: false});
+    }
+}
+
+// Cập nhật trạng thái coins (kiểm tra thu thập)
+function part4Update() {
+    part4Coins.forEach(coin => {
+        if (!coin.collected &&
+            part2Player.x < coin.x + coin.width &&
+            part2Player.x + part2Player.width > coin.x &&
+            part2Player.y < coin.y + coin.height &&
+            part2Player.y + part2Player.height > coin.y) {
+            coin.collected = true;
+            part4Collected++;
+        }
+    });
+}
+
+// Vẽ coins
+function part4Draw(ctx) {
+    ctx.fillStyle = 'yellow';
+    part4Coins.forEach(coin => {
+        if (!coin.collected) {
+            ctx.fillRect(coin.x, coin.y, coin.width, coin.height);
+        }
+    });
+
+    // Hiển thị điểm số
+    ctx.fillStyle = 'white';
+    ctx.font = '20px Arial';
+    ctx.fillText('Coins: ' + part4Collected, 10, 30);
+}
+
+// Gọi init một lần
+part4Init();
+
+// Hàm gọi trong main loop
+function part4Loop(ctx) {
+    part4Update();
+    part4Draw(ctx);
+}
+// ==================== PHẦN 5: FULL CHUẨN HÓA ====================
+
+// Biến và trạng thái boss
+let part5Boss = {x: 700, y: 150, width: 80, height: 80, color: 'purple', vx: 2};
+let part5BossHealth = 5;
+
+// Khởi tạo boss
+function part5Init() {
+    part5Boss.x = 700;
+    part5Boss.y = 150;
+    part5BossHealth = 5;
+}
+
+// Cập nhật boss
+function part5Update() {
+    // Di chuyển ngang
+    part5Boss.x += part5Boss.vx;
+    if (part5Boss.x <= 400 || part5Boss.x + part5Boss.width >= 780) {
+        part5Boss.vx *= -1;
+    }
+
+    // Va chạm với player (phần 2)
+    if (part2Player.x < part5Boss.x + part5Boss.width &&
+        part2Player.x + part2Player.width > part5Boss.x &&
+        part2Player.y < part5Boss.y + part5Boss.height &&
+        part2Player.y + part2Player.height > part5Boss.y) {
+        // Reset player
+        part2Player.x = 100;
+        part2Player.y = 300;
+        part2Player.vy = 0;
+
+        // Giảm máu boss
+        part5BossHealth--;
+        if (part5BossHealth < 0) part5BossHealth = 0;
+    }
+}
+
+// Vẽ boss và hiệu ứng
+function part5Draw(ctx) {
+    // Boss
+    ctx.fillStyle = part5Boss.color;
+    ctx.fillRect(part5Boss.x, part5Boss.y, part5Boss.width, part5Boss.height);
+
+    // HP boss
+    ctx.fillStyle = 'white';
+    ctx.font = '20px Arial';
+    ctx.fillText('Boss HP: ' + part5BossHealth, 600, 30);
+
+    // Hiệu ứng khi boss bị đánh bại
+    if (part5BossHealth === 0) {
+        ctx.fillStyle = 'red';
+        ctx.font = '40px Arial';
+        ctx.fillText('BOSS DEFEATED!', 250, 250);
+    }
+}
+
+// Gọi init một lần
+part5Init();
+
+// Hàm gọi trong main loop
+function part5Loop(ctx) {
+    if (part5BossHealth > 0) part5Update();
+    part5Draw(ctx);
+}
+
