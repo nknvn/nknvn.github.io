@@ -6,7 +6,14 @@
 <title>PARKOUR ULTIMATE SOUL — GOD MODE 7.0 FULL</title>
 <style>
 /* =====================
-   RESET & GLOBAL
+   RESET & GLOBAL STYLES
+   - Đặt lại margin, padding cho toàn bộ trang để tránh layout lỗi.
+   - Font pixel/sci-fi 'Press Start 2P' để tạo cảm giác retro, game-like.
+   - Background đen tối cho theme dark, phù hợp parkour.
+   - Overflow hidden để tránh scroll bar xuất hiện.
+   - Touch-action none để chống kéo màn hình trên mobile, tránh lag input.
+   - Color cyan mặc định cho text.
+   - Text-align center cho UI.
 ===================== */
 html, body {
     margin: 0;
@@ -15,415 +22,1600 @@ html, body {
     font-family: 'Press Start 2P', monospace;
     background: #000;
     touch-action: none;
+    color: #0ff;
+    text-align: center;
 }
-canvas { display: block; background: #000; }
+
+/* Canvas chính cho gameplay
+   - Display block để không có margin tự động.
+   - Background đen để match theme.
+   - Width/height 100vw/vh để full màn hình, responsive.
+   - Z-index thấp để UI overlay lên trên.
+   - Position relative để camera transform hoạt động.
+*/
+canvas {
+    display: block;
+    background: #000;
+    width: 100vw;
+    height: 100vh;
+    z-index: 1;
+    position: relative;
+}
 
 /* =====================
-   UI LAYER
+   UI LAYER (GLASSMORPHISM STYLE)
+   - Position fixed để overlay toàn màn hình, không di chuyển.
+   - Backdrop-filter blur(10px) để hiệu ứng kính mờ, hiện đại.
+   - Background rgba trong suốt để thấy game phía sau.
+   - Pointer-events none để không chặn input game, trừ buttons có pointer-events auto.
+   - Z-index cao để trên canvas.
 ===================== */
 #uiLayer {
-    position: fixed; top: 0; left: 0;
-    width: 100%; height: 100%;
-    pointer-events: none; z-index: 100;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 100;
+    backdrop-filter: blur(10px);
+    background: rgba(0, 0, 0, 0.1);
 }
 
-/* Buttons */
+/* Bars cho HP, Stamina, Boss HP
+   - Width cố định 200px, height 20px để vừa mắt.
+   - Background rgba trong suốt với blur nhẹ.
+   - Border cyan 2px để match theme sci-fi.
+   - Border-radius 10px bo góc, đẹp mắt.
+   - Overflow hidden để fill không tràn ra ngoài.
+   - Margin 5px để spacing.
+   - Backdrop-filter blur(5px) cho glassmorphism.
+*/
+#healthBar, #staminaBar, #bossHPBar {
+    width: 200px;
+    height: 20px;
+    background: rgba(255, 255, 255, 0.2);
+    border: 2px solid #0ff;
+    border-radius: 10px;
+    overflow: hidden;
+    backdrop-filter: blur(5px);
+    margin: 5px 0;
+}
+
+/* Fill cho bars
+   - Height 100% để lấp đầy bar.
+   - Transition width 0.3s ease để thay đổi mượt mà, không giật.
+   - Background gradient để đẹp, từ đỏ sang vàng cho HP, xanh cho stamina, đỏ tối cho boss.
+*/
+#healthFill {
+    height: 100%;
+    background: linear-gradient(90deg, #f00, #ff0);
+    transition: width 0.3s ease;
+}
+#staminaFill {
+    height: 100%;
+    background: linear-gradient(90deg, #0f0, #0ff);
+    transition: width 0.3s ease;
+}
+#bossHPFill {
+    height: 100%;
+    background: linear-gradient(90deg, #800, #f00);
+    transition: width 0.3s ease;
+}
+
+/* UI Elements như combo, FPS, notification, achievement
+   - Color cyan #0ff.
+   - Font-size 1.2em vừa phải.
+   - Text-shadow 0 0 10px #0ff để glow nhẹ.
+   - Animation glow 1s infinite alternate để nhấp nháy liên tục.
+   - Margin 5px để spacing.
+*/
+#comboDisplay, #fpsDisplay, #notification, #achievementDisplay {
+    color: #0ff;
+    font-size: 1.2em;
+    text-shadow: 0 0 10px #0ff;
+    animation: glow 1s infinite alternate;
+    margin: 5px;
+}
+
+/* Keyframe cho glow effect
+   - From: shadow nhỏ.
+   - To: shadow lớn.
+   - Infinite alternate để lặp vô hạn, alternate để qua lại.
+*/
+@keyframes glow {
+    from { text-shadow: 0 0 10px #0ff; }
+    to { text-shadow: 0 0 20px #0ff; }
+}
+
+/* Notification trượt lên
+   - Position absolute ở bottom 100px.
+   - Left 50%, transform translateX(-50%) để center.
+   - Opacity 0 ban đầu, ẩn.
+   - Transition opacity 0.5s để fade in/out.
+   - Animation slideUp 2s ease-out để trượt lên và biến mất.
+*/
+#notification {
+    position: absolute;
+    bottom: 100px;
+    left: 50%;
+    transform: translateX(-50%);
+    opacity: 0;
+    transition: opacity 0.5s;
+    animation: slideUp 2s ease-out;
+}
+
+/* Keyframe slideUp
+   - 0%: Từ dưới (translateY 50px), opacity 0.
+   - 50%: Opacity 1, ở giữa.
+   - 100%: Lên trên (translateY -50px), opacity 0.
+*/
+@keyframes slideUp {
+    0% { transform: translateX(-50%) translateY(50px); opacity: 0; }
+    50% { opacity: 1; }
+    100% { transform: translateX(-50%) translateY(-50px); opacity: 0; }
+}
+
+/* Buttons chung
+   - Font-family pixel.
+   - Cursor pointer để hover.
+   - Pointer-events auto để clickable, override UI layer.
+*/
 button {
-    font-family: 'Arial', sans-serif;
+    font-family: 'Press Start 2P', monospace;
     cursor: pointer;
+    pointer-events: auto;
 }
+
+/* UI Buttons
+   - Margin 10px, padding 15px 30px vừa.
+   - Background rgba cyan trong suốt.
+   - Color đen để contrast.
+   - Border 2px cyan.
+   - Border-radius 10px bo góc.
+   - Font-size 0.8em nhỏ gọn.
+   - Transition all 0.2s ease cho mượt.
+   - Backdrop-filter blur(5px) glassmorphism.
+*/
 button.uiButton {
-    margin: 10px; padding: 15px 30px;
-    background: #0ff; color: #000;
-    border: none; border-radius: 10px;
-    font-size: 1em; transition: 0.2s;
+    margin: 10px;
+    padding: 15px 30px;
+    background: rgba(0, 255, 255, 0.3);
+    color: #000;
+    border: 2px solid #0ff;
+    border-radius: 10px;
+    font-size: 0.8em;
+    transition: all 0.2s ease;
+    backdrop-filter: blur(5px);
 }
-button.uiButton:hover { background: #0aa; color: #fff; }
+
+/* Hover cho buttons
+   - Background sáng hơn rgba(0,255,255,0.7).
+   - Transform scale(1.05) để phóng to nhẹ.
+   - Animation shake 0.5s ease để rung.
+*/
+button.uiButton:hover {
+    background: rgba(0, 255, 255, 0.7);
+    transform: scale(1.05);
+    animation: shake 0.5s ease;
+}
+
+/* Keyframe shake
+   - 0%,100%: TranslateX 0.
+   - 25%: Sang trái -5px.
+   - 75%: Sang phải 5px.
+   - Tạo hiệu ứng rung nhẹ.
+*/
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    75% { transform: translateX(5px); }
+}
 
 /* =====================
-   SCREENS
+   MENUS / OVERLAYS
+   - Position absolute full screen.
+   - Display flex, justify-content center, align-items center để center nội dung.
+   - Flex-direction column để xếp dọc.
+   - Background rgba(0,0,0,0.9) mờ.
+   - Color cyan.
+   - Font-size 2em lớn.
+   - Z-index 200 cao hơn UI.
+   - Transition opacity 0.5s ease, transform 0.5s ease cho fade và scale.
+   - Opacity 1, transform scale(1) ban đầu.
 ===================== */
-#menuScreen, #deathScreen, #shopScreen, #optionsScreen, #leaderboardScreen, #creditsScreen, #bossIntro {
-    position: absolute; top: 0; left: 0;
-    width: 100%; height: 100%;
-    display: flex; justify-content: center; align-items: center;
+#menuScreen, #pauseScreen, #settingsScreen, #shopScreen, #loadingScreen, #winScreen, #deathScreen, #leaderboardScreen, #creditsScreen, #achievementScreen {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
     flex-direction: column;
-    background: rgba(0,0,0,0.85);
+    background: rgba(0, 0, 0, 0.9);
     color: #0ff;
     font-size: 2em;
-    z-index: 100;
-    transition: opacity 0.5s;
+    z-index: 200;
+    transition: opacity 0.5s ease, transform 0.5s ease;
     opacity: 1;
+    transform: scale(1);
 }
-#menuScreen.hide, #deathScreen.hide, #shopScreen.hide, #optionsScreen.hide, #leaderboardScreen.hide, #creditsScreen.hide, #bossIntro.hide {
-    opacity: 0; pointer-events: none;
+
+/* Hide class cho tất cả menus
+   - Opacity 0 để ẩn.
+   - Transform scale(0.9) nhỏ lại.
+   - Pointer-events none để không chặn input.
+*/
+#menuScreen.hide, #pauseScreen.hide, #settingsScreen.hide, #shopScreen.hide, #loadingScreen.hide, #winScreen.hide, #deathScreen.hide, #leaderboardScreen.hide, #creditsScreen.hide, #achievementScreen.hide {
+    opacity: 0;
+    transform: scale(0.9);
+    pointer-events: none;
 }
 
 /* =====================
    MOBILE CONTROLS
+   - Position fixed bottom 20px.
+   - Width 100% full.
+   - Display flex, justify-content space-around để cách đều.
+   - Z-index 99 cao.
 ===================== */
 #mobileControls {
-    position: fixed; bottom: 20px; width: 100%;
-    display: flex; justify-content: space-around;
+    position: fixed;
+    bottom: 20px;
+    width: 100%;
+    display: flex;
+    justify-content: space-around;
     z-index: 99;
 }
+
+/* Mobile buttons
+   - Width/height 80px hình vuông tròn.
+   - Border-radius 50% cho hình tròn.
+   - Background rgba cyan trong suốt.
+   - Border 2px cyan.
+   - Touch-action none để input mượt.
+   - Pointer-events auto.
+   - Transition all 0.2s ease.
+*/
 .mobileBtn {
-    width: 80px; height: 80px;
+    width: 80px;
+    height: 80px;
     border-radius: 50%;
-    background: rgba(0,255,255,0.3);
+    background: rgba(0, 255, 255, 0.3);
     border: 2px solid #0ff;
     touch-action: none;
+    pointer-events: auto;
+    transition: all 0.2s ease;
 }
-.mobileBtn:active { background: rgba(0,255,255,0.7); }
+
+/* Active state cho mobile buttons
+   - Background sáng hơn.
+   - Transform scale(0.9) nhỏ lại khi nhấn.
+*/
+.mobileBtn:active {
+    background: rgba(0, 255, 255, 0.7);
+    transform: scale(0.9);
+}
 
 /* =====================
-   BIOME OVERLAY
+   BIOME OVERLAY & PARALLAX
+   - Position absolute top/left 0.
+   - Width/height 100%.
+   - Mix-blend-mode overlay để blend với game.
+   - Pointer-events none.
 ===================== */
 #biomeOverlay {
-    position: absolute; top: 0; left: 0;
-    width: 100%; height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
     mix-blend-mode: overlay;
     pointer-events: none;
 }
 
-/* Particle system */
+/* Parallax background
+   - Background linear-gradient từ đen sang xám.
+   - Pointer-events none.
+   - Transform translateZ(0) để hardware acceleration.
+*/
+#parallaxBg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(180deg, #000, #111);
+    pointer-events: none;
+    transform: translateZ(0);
+}
+
+/* Particle system
+   - Position absolute.
+   - Pointer-events none.
+   - Width/height 5px nhỏ.
+   - Border-radius 50% hình tròn.
+   - Background white.
+   - Box-shadow 0 0 10px #fff glow.
+*/
 .particle {
     position: absolute;
     pointer-events: none;
-    width: 5px; height: 5px;
+    width: 5px;
+    height: 5px;
     border-radius: 50%;
     background: #fff;
+    box-shadow: 0 0 10px #fff;
 }
 
-/* Font import */
+/* Traps styles
+   - Position absolute.
+   - Background đỏ.
+   - Border vàng.
+*/
+.trap {
+    position: absolute;
+    background: #f00;
+    border: 2px solid #ff0;
+}
+
+/* Portals styles
+   - Position absolute.
+   - Background tím trong suốt.
+   - Border hồng.
+   - Border-radius 50% tròn.
+*/
+.portal {
+    position: absolute;
+    background: rgba(255, 0, 255, 0.5);
+    border: 2px solid #f0f;
+    border-radius: 50%;
+}
+
+/* =====================
+   ANIMATIONS & EFFECTS
+   - Thêm keyframes cho camera shake, particle fade, parallax move.
+===================== */
+@keyframes cameraShake {
+    0%, 100% { transform: translate(0, 0); }
+    25% { transform: translate(-5px, -5px); }
+    50% { transform: translate(5px, 5px); }
+    75% { transform: translate(-5px, 5px); }
+}
+
+@keyframes particleFade {
+    0% { opacity: 1; }
+    100% { opacity: 0; }
+}
+
+@keyframes parallaxMove {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-100px); }
+}
+
+/* Media queries cho mobile
+   - Max-width 768px.
+   - Giảm font-size buttons, padding, bar width, mobile button size.
+*/
+@media (max-width: 768px) {
+    button.uiButton {
+        font-size: 0.6em;
+        padding: 10px 20px;
+    }
+    #healthBar, #staminaBar, #bossHPBar {
+        width: 150px;
+    }
+    .mobileBtn {
+        width: 60px;
+        height: 60px;
+    }
+}
+
+/* Font import từ Google Fonts
+   - Family Press Start 2P.
+*/
 @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
 body { font-family: 'Press Start 2P', monospace; }
+
+/* Audio ẩn
+   - Display none.
+*/
 audio { display: none; }
 </style>
 </head>
 <body>
+<!-- Canvas chính cho gameplay - Đây là nơi vẽ toàn bộ game như player, platforms, enemies -->
 <canvas id="gameCanvas"></canvas>
 
+<!-- Parallax background - Layer nền parallax để tạo hiệu ứng chiều sâu, di chuyển chậm hơn camera -->
+<div id="parallaxBg"></div>
+
+<!-- UI Layer - Overlay toàn màn hình cho UI, với glassmorphism để trong suốt và đẹp mắt -->
 <div id="uiLayer">
-    <!-- MENU -->
+    <!-- MAIN MENU - Màn hình chính khi mở game, hiển thị tiêu đề và các nút lựa chọn -->
     <div id="menuScreen">
+        <!-- Tiêu đề game với break line để xuống dòng -->
         <div>PARKOUR ULTIMATE SOUL<br>GOD MODE 7.0 FULL</div>
+        <!-- Nút START - Khi click, gọi hàm startGame() để bắt đầu gameplay, ẩn menu và khởi tạo game -->
         <button class="uiButton" onclick="startGame()">START</button>
-        <button class="uiButton" onclick="showOptions()">OPTIONS</button>
+        <!-- Nút SETTINGS - Mở màn hình cài đặt để toggle âm thanh, debug, v.v. -->
+        <button class="uiButton" onclick="showSettings()">SETTINGS</button>
+        <!-- Nút SHOP - Hiển thị shop để mua upgrades như speed, jump với coins -->
         <button class="uiButton" onclick="showShop()">SHOP</button>
+        <!-- Nút LEADERBOARD - Hiển thị bảng xếp hạng điểm cao từ localStorage -->
         <button class="uiButton" onclick="showLeaderboard()">LEADERBOARD</button>
+        <!-- Nút CREDITS - Hiển thị thông tin tác giả và credits -->
         <button class="uiButton" onclick="showCredits()">CREDITS</button>
+        <!-- Nút ACHIEVEMENTS - Mở màn hình thành tựu đã unlock như "First Jump", "Boss Killer" -->
+        <button class="uiButton" onclick="showAchievements()">ACHIEVEMENTS</button>
     </div>
 
-    <!-- DEATH -->
-    <div id="deathScreen" class="hide">
-        <div>YOU DIED</div>
-        <button class="uiButton" onclick="restartGame()">RETRY</button>
+    <!-- PAUSE MENU - Xuất hiện khi nhấn P trong game, tạm dừng loop và hiển thị options -->
+    <div id="pauseScreen" class="hide">
+        <!-- Text "PAUSED" để thông báo trạng thái -->
+        <div>PAUSED</div>
+        <!-- Nút RESUME - Tiếp tục game, gọi resumeGame() để chạy lại loop -->
+        <button class="uiButton" onclick="resumeGame()">RESUME</button>
+        <!-- Nút SETTINGS - Mở settings ngay trong pause để thay đổi mà không thoát -->
+        <button class="uiButton" onclick="showSettings()">SETTINGS</button>
+        <!-- Nút MENU - Quay về menu chính, reset game state -->
         <button class="uiButton" onclick="showMenu()">MENU</button>
     </div>
 
-    <!-- SHOP -->
+    <!-- SETTINGS - Màn hình cài đặt với các toggle và options -->
+    <div id="settingsScreen" class="hide">
+        <!-- Tiêu đề SETTINGS -->
+        <div>SETTINGS</div>
+        <!-- Nút TOGGLE MUSIC - Bật/tắt âm thanh nền, sử dụng Web Audio API -->
+        <button class="uiButton" onclick="toggleAudio()">TOGGLE MUSIC</button>
+        <!-- Nút TOGGLE DEBUG - Bật/tắt debug mode để hiển thị FPS, vị trí player, v.v. -->
+        <button class="uiButton" onclick="toggleDebug()">TOGGLE DEBUG</button>
+        <!-- Nút BACK - Đóng settings và quay về menu trước đó -->
+        <button class="uiButton" onclick="closeSettings()">BACK</button>
+    </div>
+
+    <!-- SHOP - Màn hình mua upgrades với giá coins, cập nhật player stats -->
     <div id="shopScreen" class="hide">
+        <!-- Tiêu đề SHOP -->
         <div>SHOP</div>
+        <!-- Nút SPEED - Tăng tốc chạy player, tốn 10 coins, gọi buyUpgrade('speed') -->
         <button class="uiButton" onclick="buyUpgrade('speed')">SPEED (10 coins)</button>
+        <!-- Nút JUMP - Tăng độ cao nhảy, tốn 10 coins, cho phép nhảy cao hơn -->
         <button class="uiButton" onclick="buyUpgrade('jump')">JUMP (10 coins)</button>
+        <!-- Nút DASH - Tăng tốc dash, tốn 10 coins, cho air dash xa hơn -->
         <button class="uiButton" onclick="buyUpgrade('dash')">DASH (10 coins)</button>
+        <!-- Nút SHIELD - Cho shield để giảm damage, tốn 10 coins -->
         <button class="uiButton" onclick="buyUpgrade('shield')">SHIELD (10 coins)</button>
+        <!-- Nút REVIVE - Cho revive khi chết, tốn 10 coins -->
         <button class="uiButton" onclick="buyUpgrade('revive')">REVIVE (10 coins)</button>
+        <!-- Nút SKIN - Thay đổi skin player, tốn 10 coins -->
         <button class="uiButton" onclick="buyUpgrade('skin')">SKIN (10 coins)</button>
+        <!-- Nút BACK - Đóng shop -->
         <button class="uiButton" onclick="closeShop()">BACK</button>
     </div>
 
-    <!-- OPTIONS -->
-    <div id="optionsScreen" class="hide">
-        <div>OPTIONS</div>
-        <button class="uiButton" onclick="toggleAudio()">TOGGLE MUSIC</button>
-        <button class="uiButton" onclick="closeOptions()">BACK</button>
-    </div>
-
-    <!-- LEADERBOARD -->
+    <!-- LEADERBOARD - Hiển thị top scores từ localStorage -->
     <div id="leaderboardScreen" class="hide">
+        <!-- Tiêu đề LEADERBOARD -->
         <div>LEADERBOARD</div>
+        <!-- Div chứa list scores, cập nhật bởi JS -->
         <div id="leaderboardList">No records yet</div>
+        <!-- Nút BACK - Đóng leaderboard -->
         <button class="uiButton" onclick="closeLeaderboard()">BACK</button>
     </div>
 
-    <!-- CREDITS -->
+    <!-- CREDITS - Thông tin tác giả -->
     <div id="creditsScreen" class="hide">
+        <!-- Tiêu đề CREDITS -->
         <div>CREDITS</div>
+        <!-- Text credits -->
         <div>Created by Ngọc Khôi Nguyễn</div>
+        <!-- Nút BACK - Đóng credits -->
         <button class="uiButton" onclick="closeCredits()">BACK</button>
     </div>
 
-    <!-- BOSS INTRO -->
-    <div id="bossIntro" class="hide">
-        <div id="bossName">BOSS</div>
+    <!-- ACHIEVEMENT SCREEN - Hiển thị thành tựu -->
+    <div id="achievementScreen" class="hide">
+        <!-- Tiêu đề ACHIEVEMENTS -->
+        <div>ACHIEVEMENTS</div>
+        <!-- Div chứa list achievements, cập nhật bởi JS -->
+        <div id="achievementList">No achievements yet</div>
+        <!-- Nút BACK - Đóng achievements -->
+        <button class="uiButton" onclick="closeAchievements()">BACK</button>
     </div>
 
-    <!-- MOBILE CONTROLS -->
+    <!-- LOADING SCREEN - Hiển thị khi load game -->
+    <div id="loadingScreen" class="hide">
+        <!-- Text LOADING -->
+        <div>LOADING...</div>
+    </div>
+
+    <!-- WIN SCREEN - Khi thắng game -->
+    <div id="winScreen" class="hide">
+        <!-- Text YOU WIN -->
+        <div>YOU WIN!</div>
+        <!-- Nút MENU - Quay về menu -->
+        <button class="uiButton" onclick="showMenu()">MENU</button>
+    </div>
+
+    <!-- DEATH SCREEN - Khi thua -->
+    <div id="deathScreen" class="hide">
+        <!-- Text YOU DIED -->
+        <div>YOU DIED</div>
+        <!-- Nút RETRY - Restart game -->
+        <button class="uiButton" onclick="restartGame()">RETRY</button>
+        <!-- Nút MENU - Quay về menu -->
+        <button class="uiButton" onclick="showMenu()">MENU</button>
+    </div>
+
+    <!-- IN-GAME UI - Hiển thị trong gameplay -->
+    <div id="inGameUI" style="position: absolute; top: 10px; left: 10px; color: #0ff;">
+        <!-- Thanh HP với bar và fill -->
+        <div>Health: <div id="healthBar"><div id="healthFill"></div></div></div>
+        <!-- Thanh Stamina với bar và fill -->
+        <div>Stamina: <div id="staminaBar"><div id="staminaFill"></div></div></div>
+        <!-- Hiển thị combo -->
+        <div>Combo: <span id="comboDisplay">0</span></div>
+        <!-- Hiển thị FPS -->
+        <div>FPS: <span id="fpsDisplay">60</span></div>
+        <!-- Nút PAUSE - Tạm dừng game -->
+        <button id="pauseBtn" class="uiButton" onclick="pauseGame()" style="position: absolute; top: 10px; right: 10px;">PAUSE</button>
+        <!-- Thanh HP Boss, ẩn ban đầu -->
+        <div id="bossHPBar" style="display: none;"><div id="bossHPFill"></div></div>
+    </div>
+
+    <!-- NOTIFICATION - Thông báo trượt lên như "Combo!", "Coin Collected" -->
+    <div id="notification"></div>
+
+    <!-- MOBILE CONTROLS - Nút cho mobile -->
     <div id="mobileControls">
+        <!-- Nút trái để di chuyển trái -->
         <div class="mobileBtn" id="leftBtn">◀</div>
+        <!-- Nút nhảy để jump -->
         <div class="mobileBtn" id="jumpBtn">▲</div>
+        <!-- Nút dash để dash -->
         <div class="mobileBtn" id="dashBtn">▶</div>
     </div>
 
-    <!-- BIOME OVERLAY -->
+    <!-- BIOME OVERLAY - Overlay cho biomes như Neon City -->
     <div id="biomeOverlay"></div>
 </div>
 
-<!-- AUDIO -->
-<audio id="bgMusic" loop src="bgm.mp3"></audio>
-<audio id="jumpSnd" src="jump.wav"></audio>
-<audio id="dashSnd" src="dash.wav"></audio>
-<audio id="hitSnd" src="hit.wav"></audio>
-<audio id="bossSnd" src="boss.wav"></audio>
-<audio id="coinSnd" src="coin.wav"></audio>
+<!-- AUDIO TAGS - Ẩn, sử dụng Web Audio API thay vì file -->
+<audio id="bgMusic" loop></audio>
+<audio id="jumpSound"></audio>
+<audio id="dashSound"></audio>
+<audio id="hitSound"></audio>
+<audio id="bossSound"></audio>
+<audio id="coinSound"></audio>
+<audio id="trapSound"></audio>
 
+<!-- SCRIPT TAG - Bắt đầu JS, sẽ mở rộng trong phần sau -->
 <script>
 // =====================
-// GLOBAL VARIABLES
+// CONSTANTS & GLOBALS - Định nghĩa hằng số và biến toàn cục
 // =====================
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 let width = canvas.width = window.innerWidth;
 let height = canvas.height = window.innerHeight;
 
-let gameState = 'menu';
-let keys = {};
-let player = {};
-let platforms = [];
-let enemies = [];
-let particles = [];
-let biomes = [];
-let currentBiome = 0;
-let camera = {x:0, y:0};
-let upgrades = {speed:0, jump:0, dash:0, shield:false, revive:0, skin:0};
-let coins = 0;
-let audio = {
-    bg: document.getElementById('bgMusic'),
-    jump: document.getElementById('jumpSnd'),
-    dash: document.getElementById('dashSnd'),
-    hit: document.getElementById('hitSnd'),
-    boss: document.getElementById('bossSnd'),
-    coin: document.getElementById('coinSnd')
-};
-let lastTime = 0;
-let bosses = [];
-let boss = null;
+// Constants cho game
+const MAX_PARTICLES = 100; // Giới hạn particles để tránh lag
+const MAX_ENEMIES = 10; // Giới hạn enemies
+const GRAVITY = 50; // Trọng lực cho physics
+const FRICTION = 0.9; // Ma sát để giảm tốc
+
+// Game state
+let gameState = 'menu'; // 'menu', 'playing', 'paused', 'dead', 'win'
+let keys = {}; // Object lưu trạng thái phím
+let player = {}; // Object player với x, y, vx, vy, health, v.v.
+let platforms = []; // Array platforms
+let enemies = []; // Array enemies
+let particles = []; // Array particles cho hiệu ứng
+let biomes = []; // Array biomes
+let currentBiome = 0; // Index biome hiện tại
+let camera = {x: 0, y: 0, shake: 0}; // Camera với shake effect
+let upgrades = JSON.parse(localStorage.getItem('upgrades') || '{"speed":0, "jump":0, "dash":0, "shield":false, "revive":0, "skin":0}'); // Upgrades từ localStorage
+let coins = 0; // Số coins
+let score = 0; // Điểm số
+let combo = 0; // Combo nhảy
+let stamina = 100; // Stamina cho dash
+let maxStamina = 100; // Max stamina
+let audioEnabled = true; // Có bật âm thanh không
+let audio = {}; // Object audio, sẽ khởi tạo với Web Audio API
+let lastTime = 0; // Thời gian frame trước
+let deltaTime = 0; // Delta time cho smooth update
+let fps = 60; // FPS hiện tại
+let frameCount = 0; // Đếm frame
+let lastFpsUpdate = 0; // Thời gian update FPS
+let bosses = []; // Array bosses
+let boss = null; // Boss hiện tại
+let bossIndex = 0; // Index boss
+let checkpoints = []; // Array checkpoints
+let traps = []; // Array traps
+let portals = []; // Array portals
+
+// Object pools để tối ưu
+let particlePool = []; // Pool particles
+let projectilePool = []; // Pool projectiles
 
 // =====================
-// EVENT LISTENERS
+// UTILITIES - Các hàm tiện ích
 // =====================
-window.addEventListener('keydown', e=>keys[e.code]=true);
-window.addEventListener('keyup', e=>keys[e.code]=false);
-window.addEventListener('resize', ()=>{
-    width = canvas.width = window.innerWidth;
+function clamp(value, min, max) { return Math.min(Math.max(value, min), max); } // Giới hạn giá trị
+function random(min, max) { return Math.random() * (max - min) + min; } // Random số
+function distance(x1, y1, x2, y2) { return Math.sqrt((x2 - x1)**2 + (y2 - y1)**2); } // Tính khoảng cách
+
+// =====================
+// EVENT LISTENERS - Lắng nghe sự kiện
+// =====================
+window.addEventListener('keydown', e => {
+    keys[e.code] = true; // Đặt key xuống
+    if (e.code === 'KeyP') pauseGame(); // Pause khi nhấn P
+    if (e.code === 'KeyR') restartGame(); // Restart khi nhấn R
+});
+window.addEventListener('keyup', e => keys[e.code] = false); // Đặt key lên
+window.addEventListener('resize', () => {
+    width = canvas.width = window.innerWidth; // Resize canvas
     height = canvas.height = window.innerHeight;
 });
 
+// Mobile controls
+document.getElementById('leftBtn').addEventListener('touchstart', () => keys['ArrowLeft'] = true); // Touch trái
+document.getElementById('leftBtn').addEventListener('touchend', () => keys['ArrowLeft'] = false);
+document.getElementById('jumpBtn').addEventListener('touchstart', () => keys['Space'] = true); // Touch nhảy
+document.getElementById('jumpBtn').addEventListener('touchend', () => keys['Space'] = false);
+document.getElementById('dashBtn').addEventListener('touchstart', () => keys['KeyX'] = true); // Touch dash
+document.getElementById('dashBtn').addEventListener('touchend', () => keys['KeyX'] = false);
+
 // =====================
-// PLAYER INIT
+// PLAYER INIT - Khởi tạo player
 // =====================
 function initPlayer(){
     player = {
-        x: width/2, y: height-150,
-        w: 50, h: 80,
-        vx:0, vy:0,
-        speed:5+upgrades.speed,
-        jump:15+upgrades.jump,
-        dash:20+upgrades.dash,
-        onGround:false,
-        shield: upgrades.shield,
-        dashCooldown:0,
-        doubleJump:true,
-        health:100,
-        maxHealth:100
+        x: width/2, // Vị trí x ban đầu
+        y: height-150, // Vị trí y ban đầu
+        w: 50, // Width
+        h: 80, // Height
+        vx: 0, // Velocity x
+        vy: 0, // Velocity y
+        speed: 5 + upgrades.speed, // Tốc chạy
+        jump: 15 + upgrades.jump, // Độ cao nhảy
+        dash: 20 + upgrades.dash, // Tốc dash
+        onGround: false, // Có trên đất không
+        shield: upgrades.shield, // Có shield không
+        dashCooldown: 0, // Cooldown dash
+        doubleJump: true, // Có double jump không
+        health: 100, // HP
+        maxHealth: 100, // Max HP
+        animationState: 'idle' // Trạng thái animation
     };
 }
 
 // =====================
-// PLATFORM GENERATION
+// PLATFORM GENERATION - Tạo platforms
 // =====================
 function generatePlatforms(){
-    platforms = [];
-    let y = height - 50;
-    for(let i=0;i<200;i++){
-        let w = 100 + Math.random()*200;
-        platforms.push({x:i*250 + Math.random()*100, y:y, w:w, h:20, type:'normal'});
-        y -= Math.random()*100;
-        if(y<100) y = height - 50;
+    platforms = []; // Reset array
+    let y = height - 50; // Y bắt đầu
+    for(let i=0; i<200; i++){ // Tạo 200 platforms
+        let w = 100 + Math.random()*200; // Width random
+        let hasCoin = Math.random() < 0.1; // 10% có coin
+        platforms.push({x: i*250 + Math.random()*100, y: y, w: w, h: 20, type: 'normal', coin: hasCoin, collected: false}); // Push platform
+        y -= Math.random()*100; // Giảm y
+        if(y < 100) y = height - 50; // Reset y nếu quá thấp
     }
 }
 
 // =====================
-// PLAYER INPUT
+// PLAYER INPUT - Xử lý input
 // =====================
 function handleInput(){
-    if(keys['ArrowLeft']) player.vx = -player.speed;
-    else if(keys['ArrowRight']) player.vx = player.speed;
-    else player.vx = 0;
+    if(keys['ArrowLeft']) player.vx = -player.speed; // Chạy trái
+    else if(keys['ArrowRight']) player.vx = player.speed; // Chạy phải
+    else player.vx = 0; // Dừng
 
-    if(keys['Space']){
-        if(player.onGround){player.vy=-player.jump;player.onGround=false;audio.jump.play();player.doubleJump=true;}
-        else if(player.doubleJump){player.vy=-player.jump;player.doubleJump=false;audio.jump.play();}
-    }
-
-    if(keys['KeyX'] && player.dashCooldown<=0){
-        player.vx += (keys['ArrowRight']?-1:1)*player.dash;
-        player.dashCooldown=0.5;
-        audio.dash.play();
-    }
-}
-
-// =====================
-// PLAYER PHYSICS
-// =====================
-function updatePlayer(dt){
-    player.vy += 50*dt;
-    player.x += player.vx;
-    player.y += player.vy;
-    if(player.dashCooldown>0) player.dashCooldown-=dt;
-    player.onGround=false;
-
-    for(let p of platforms){
-        if(player.x+player.w>p.x && player.x<p.x+p.w &&
-           player.y+player.h>p.y && player.y+player.h<p.y+p.h+20 &&
-           player.vy>=0){
-            player.y=p.y-player.h;
-            player.vy=0;
-            player.onGround=true;
+    if(keys['Space']){ // Nhấn Space
+        if(player.onGround){ // Nếu trên đất
+            player.vy = -player.jump; // Nhảy
+            player.onGround = false;
+            playSound('jump'); // Phát âm nhảy
+            player.doubleJump = true; // Reset double jump
+        } else if(player.doubleJump){ // Double jump
+            player.vy = -player.jump;
+            player.doubleJump = false;
+            playSound('jump');
         }
     }
-    if(player.y>height+200) gameOver();
+
+    if(keys['KeyX'] && player.dashCooldown <= 0 && stamina > 10){ // Dash nếu có stamina
+        player.vx += (keys['ArrowRight'] ? -1 : 1) * player.dash; // Dash theo hướng
+        player.dashCooldown = 0.5; // Cooldown
+        stamina -= 10; // Giảm stamina
+        playSound('dash'); // Phát âm dash
+    }
 }
 
 // =====================
-// CAMERA
+// PLAYER PHYSICS - Vật lý player
 // =====================
-function updateCamera(){ camera.x=player.x-width/2; camera.y=player.y-height/2; }
+function updatePlayer(dt){
+    player.vy += GRAVITY * dt; // Thêm trọng lực
+    player.x += player.vx; // Cập nhật x
+    player.y += player.vy; // Cập nhật y
+    if(player.dashCooldown > 0) player.dashCooldown -= dt; // Giảm cooldown
+    player.onGround = false; // Reset onGround
+
+    // Collision với platforms
+    for(let p of platforms){
+        if(player.x + player.w > p.x && player.x < p.x + p.w &&
+           player.y + player.h > p.y && player.y + player.h < p.y + p.h + 20 &&
+           player.vy >= 0){ // Nếu chạm dưới
+            player.y = p.y - player.h; // Đặt lên platform
+            player.vy = 0; // Dừng vy
+            player.onGround = true; // Set onGround
+            if(p.coin && !p.collected){ // Nếu có coin
+                           p.collected = true; // Đánh dấu đã collect
+                coins += 1; // Tăng coins
+                score += 10; // Tăng score
+                playSound('coin'); // Phát âm coin
+                showNotification('Coin Collected!'); // Thông báo
+            }
+        }
+    }
+
+    // Collision với enemies
+    for(let e of enemies){
+        if(player.x + player.w > e.x && player.x < e.x + e.w &&
+           player.y + player.h > e.y && player.y < e.y + e.h){ // Nếu chạm enemy
+            if(!player.shield){ // Nếu không có shield
+                player.health -= 10; // Giảm HP
+                playSound('hit'); // Phát âm hit
+                camera.shake = 0.2; // Shake camera
+            }
+            enemies.splice(enemies.indexOf(e), 1); // Xóa enemy
+            coins += 5; // Tăng coins
+            score += 50; // Tăng score
+        }
+    }
+
+    // Collision với boss projectiles
+    if(boss){
+        for(let proj of boss.projectiles){
+            if(player.x + player.w > proj.x && player.x < proj.x + 5 &&
+               player.y + player.h > proj.y && player.y < proj.y + 5){ // Nếu chạm projectile
+                if(!player.shield){
+                    player.health -= 20; // Giảm HP nhiều hơn
+                    playSound('hit');
+                    camera.shake = 0.3; // Shake mạnh hơn
+                }
+                boss.projectiles.splice(boss.projectiles.indexOf(proj), 1); // Xóa projectile
+            }
+        }
+    }
+
+    // Collision với traps
+    for(let t of traps){
+        if(player.x + player.w > t.x && player.x < t.x + t.w &&
+           player.y + player.h > t.y && player.y < t.y + t.h){ // Nếu chạm trap
+            player.health -= 30; // Giảm HP
+            playSound('trap'); // Phát âm trap
+            camera.shake = 0.4; // Shake mạnh
+            showNotification('Trap Hit!'); // Thông báo
+        }
+    }
+
+    // Portal collision
+    for(let p of portals){
+        if(player.x + player.w > p.x && player.x < p.x + p.w &&
+           player.y + player.h > p.y && player.y < p.y + p.h){ // Nếu chạm portal
+            player.x = p.targetX; // Teleport
+            player.y = p.targetY;
+            playSound('coin'); // Âm teleport
+            showNotification('Teleported!'); // Thông báo
+        }
+    }
+
+    if(player.health <= 0) gameOver(); // Nếu HP <= 0, game over
+    if(player.y > height + 200) gameOver(); // Nếu rơi xuống, game over
+
+    // Update animation state
+    if(player.vy < 0) player.animationState = 'jump'; // Nhảy
+    else if(Math.abs(player.vx) > 0) player.animationState = 'run'; // Chạy
+    else player.animationState = 'idle'; // Idle
+
+    // Regen stamina
+    if(stamina < maxStamina) stamina += 20 * dt; // Tăng stamina theo thời gian
+}
 
 // =====================
-// RENDER FUNCTIONS
+// CAMERA - Cập nhật camera follow player
 // =====================
-function renderPlatforms(){ ctx.fillStyle='gray'; for(let p of platforms) ctx.fillRect(p.x,p.y,p.w,p.h);}
-function renderPlayer(){ ctx.fillStyle=player.shield?'cyan':'white'; ctx.fillRect(player.x,player.y,player.w,player.h); }
+function updateCamera(){
+    camera.x = player.x - width / 2; // Center camera theo player x
+    camera.y = player.y - height / 2; // Center camera theo player y
+    if(camera.shake > 0){ // Nếu shake
+        camera.shake -= deltaTime; // Giảm shake
+        ctx.save(); // Save context
+        ctx.translate(random(-5, 5), random(-5, 5)); // Translate random
+    }
+}
 
 // =====================
-// BIOMES
+// RENDER FUNCTIONS - Vẽ các elements
+// =====================
+function renderPlatforms(){
+    ctx.fillStyle = 'gray'; // Màu platforms
+    for(let p of platforms){
+        ctx.fillRect(p.x, p.y, p.w, p.h); // Vẽ platform
+        if(p.coin && !p.collected){ // Nếu có coin chưa collect
+            ctx.fillStyle = 'yellow'; // Màu vàng
+            ctx.fillRect(p.x + p.w / 2 - 5, p.y - 10, 10, 10); // Vẽ coin
+            ctx.fillStyle = 'gray'; // Reset màu
+        }
+    }
+}
+
+function renderPlayer(){
+    ctx.fillStyle = player.shield ? 'cyan' : 'white'; // Màu player
+    ctx.fillRect(player.x, player.y, player.w, player.h); // Vẽ player
+    // Afterimage effect
+    if(player.animationState === 'dash'){ // Nếu dash
+        ctx.globalAlpha = 0.5; // Alpha 0.5
+        ctx.fillRect(player.x - 10, player.y, player.w, player.h); // Vẽ afterimage
+        ctx.globalAlpha = 1; // Reset alpha
+    }
+}
+
+function renderEnemies(){
+    ctx.fillStyle = 'red'; // Màu enemies
+    for(let e of enemies){
+        ctx.fillRect(e.x, e.y, e.w, e.h); // Vẽ enemy
+    }
+    if(boss) boss.render(); // Vẽ boss nếu có
+}
+
+function renderTraps(){
+    for(let t of traps){
+        ctx.fillStyle = t.type === 'laser' ? 'red' : 'orange'; // Màu theo type
+        ctx.fillRect(t.x, t.y, t.w, t.h); // Vẽ trap
+    }
+}
+
+function renderPortals(){
+    for(let p of portals){
+        ctx.fillStyle = 'purple'; // Màu portal
+        ctx.fillRect(p.x, p.y, p.w, p.h); // Vẽ portal
+    }
+}
+
+// =====================
+// PARTICLE SYSTEM - Quản lý particles
+// =====================
+function createParticle(x, y, vx = 0, vy = 0, life = 1, color = 'white'){
+    let p = particlePool.pop() || {}; // Lấy từ pool
+    p.x = x; p.y = y; p.vx = vx; p.vy = vy; p.life = life; p.color = color;
+    particles.push(p); // Thêm vào array
+}
+
+function updateParticles(dt){
+    for(let i = particles.length - 1; i >= 0; i--){
+        let p = particles[i];
+        p.x += p.vx * dt * 60; // Cập nhật vị trí
+        p.y += p.vy * dt * 60;
+        p.life -= dt; // Giảm life
+        if(p.life <= 0){ // Nếu hết life
+            particlePool.push(p); // Trả về pool
+            particles.splice(i, 1); // Xóa
+        }
+    }
+}
+
+function renderParticles(){
+    for(let p of particles){
+        ctx.fillStyle = p.color; // Màu particle
+        ctx.fillRect(p.x, p.y, 5, 5); // Vẽ particle
+    }
+}
+
+function spawnEnvironmentParticles(){
+    switch(biomes[currentBiome].name){
+        case 'Neon City':
+            if(Math.random() < 0.1) createParticle(random(camera.x, camera.x + width), random(camera.y, camera.y + height), 0, 1, 1, 'cyan'); // Particles cyan
+            break;
+        case 'Lava Hell':
+            if(Math.random() < 0.1) createParticle(random(camera.x, camera.x + width), random(camera.y, camera.y + height), 0, -1, 1, 'orange'); // Particles orange
+            break;
+        // Thêm cases cho các biomes khác
+    }
+}
+
+// =====================
+// BIOMES - Quản lý biomes
 // =====================
 function initBiomes(){
     biomes = [
-        {name:'Neon City', color:'rgba(0,255,255,0.2)'},
-        {name:'Lava Hell', color:'rgba(255,50,0,0.2)'},
-        {name:'Cyber Desert', color:'rgba(255,255,0,0.2)'},
-        {name:'Frozen Void', color:'rgba(0,255,255,0.2)'},
-        {name:'Toxic Swamp', color:'rgba(0,150,0,0.2)'},
-        {name:'Sky Temple', color:'rgba(255,255,255,0.2)'},
-        {name:'Starfield', color:'rgba(200,200,255,0.2)'},
-        {name:'Quantum Forest', color:'rgba(100,255,100,0.2)'},
-        {name:'Infinity Ruins', color:'rgba(255,100,255,0.2)'},
-        {name:'Rainbow Horizon', color:'rgba(255,0,255,0.2)'}
+        {name: 'Neon City', color: 'rgba(0,255,255,0.2)'},
+        {name: 'Lava Hell', color: 'rgba(255,50,0,0.2)'},
+        {name: 'Cyber Desert', color: 'rgba(255,255,0,0.2)'},
+        {name: 'Frozen Void', color: 'rgba(0,255,255,0.2)'},
+        {name: 'Toxic Swamp', color: 'rgba(0,150,0,0.2)'},
+        {name: 'Sky Temple', color: 'rgba(255,255,255,0.2)'},
+        {name: 'Starfield', color: 'rgba(200,200,255,0.2)'},
+        {name: 'Quantum Forest', color: 'rgba(100,255,100,0.2)'},
+        {name: 'Infinity Ruins', color: 'rgba(255,100,255,0.2)'},
+        {name: 'Rainbow Horizon', color: 'rgba(255,0,255,0.2)'}
     ];
 }
 
 function checkBiome(){
-    currentBiome=Math.floor(player.x/1000)%biomes.length;
-    document.getElementById('biomeOverlay').style.background=biomes[currentBiome].color;
+    currentBiome = Math.floor(player.x / 1000) % biomes.length; // Tính biome theo x
+    document.getElementById('biomeOverlay').style.background = biomes[currentBiome].color; // Cập nhật overlay
+    document.getElementById('biomeDisplay').innerText = biomes[currentBiome].name; // Cập nhật UI
 }
 
 // =====================
-// SHOP & UPGRADES
+// ENEMIES & BOSS - Logic enemies và boss
 // =====================
-function buyUpgrade(type){
-    if(coins < 10) return; // Not enough coins
-    coins -= 10;
-    switch(type){
-        case 'speed': upgrades.speed+=1; player.speed=5+upgrades.speed; break;
-        case 'jump': upgrades.jump+=1; player.jump=15+upgrades.jump; break;
-        case 'dash': upgrades.dash+=5; break;
-        case 'shield': upgrades.shield=true; player.shield=true; break;
-        case 'revive': upgrades.revive+=1; break;
-        case 'skin': upgrades.skin+=1; break;
+function updateEnemies(dt){
+    for(let e of enemies){
+        e.vx = (player.x > e.x) ? 2 : -2; // Chạy về player
+        e.x += e.vx * dt * 60; // Cập nhật x
+        // Thêm logic attack nếu cần
     }
-    audio.coin.play();
+}
+
+class Boss {
+    constructor(name, x, y, w, h){
+        this.name = name; this.x = x; this.y = y; this.w = w; this.h = h;
+        this.phase = 1; this.health = 100; this.maxHealth = 100; this.rage = false;
+        this.projectiles = []; this.active = true;
+    }
+    update(dt){
+        if(!this.active) return;
+        if(this.health <= this.maxHealth / 2 && !this.rage){ this.rage = true; this.phase = 2; } // Rage khi HP thấp
+        switch(this.phase){
+            case 1: this.phaseOne(dt); break;
+            case 2: this.phaseTwo(dt); break;
+            // Thêm phases khác
+        }
+        for(let i = this.projectiles.length - 1; i >= 0; i--){
+            let p = this.projectiles[i];
+            p.x += p.vx * dt * 60; p.y += p.vy * dt * 60; p.life -= dt;
+            if(p.life <= 0) this.projectiles.splice(i, 1); // Xóa projectile hết life
+        }
+    }
+    phaseOne(dt){ this.x += Math.sin(Date.now() / 500) * 1.5; if(Math.random() < 0.05) this.shoot('cyan'); } // Phase 1: Di chuyển và bắn
+    phaseTwo(dt){ if(player.x < this.x) this.x -= 2; else this.x += 2; if(Math.random() < 0.02) this.shoot('red'); } // Phase 2: Chase và bắn
+    shoot(color){ this.projectiles.push({x: this.x + this.w / 2, y: this.y + this.h / 2, vx: (Math.random() - 0.5) * 5, vy: 3 + Math.random() * 2, life: 5, color: color}); } // Bắn projectile
+    render(){
+        if(!this.active) return;
+        ctx.fillStyle = this.rage ? 'orange' : 'red'; // Màu boss
+        ctx.fillRect(this.x, this.y, this.w, this.h); // Vẽ boss
+        ctx.fillStyle = 'black'; ctx.fillRect(this.x, this.y - 10, this.w, 5); // HP bar background
+        ctx.fillStyle = 'lime'; ctx.fillRect(this.x, this.y - 10, this.w * (this.health / this.maxHealth), 5); // HP bar fill
+        for(let p of this.projectiles){ ctx.fillStyle = p.color; ctx.fillRect(p.x, p.y, 5, 5); } // Vẽ projectiles
+    }
+}
+
+function initBosses(){
+    bosses = [new Boss('Shadow Orb', width + 200, 200, 80, 80), new Boss('Titan Runner', width + 400, height - 150, 100, 120)]; // Khởi tạo bosses
+}
+
+function updateBoss(dt){
+    if(!boss && player.x > 500) boss = bosses[bossIndex]; // Spawn boss
+    if(boss) boss.update(dt); // Update boss
 }
 
 // =====================
-// SHOW / HIDE SCREENS
+// UI UPDATE - Cập nhật UI in-game
+// =====================
+function updateUI(){
+    document.getElementById('healthFill').style.width = (player.health / player.maxHealth) * 100 + '%'; // Cập nhật HP bar
+    document.getElementById('staminaFill').style.width = (stamina / maxStamina) * 100 + '%'; // Cập nhật stamina bar
+    document.getElementById('comboDisplay').innerText = combo; // Cập nhật combo
+    document.getElementById('fpsDisplay').innerText = fps; // Cập nhật FPS
+    document.getElementById('coinsDisplay').innerText = coins; // Cập nhật coins
+    document.getElementById('scoreDisplay').innerText = score; // Cập nhật score
+    if(boss){ // Nếu có boss
+        document.getElementById('bossHPBar').style.display = 'block'; // Hiển thị boss HP
+        document.getElementById('bossHPFill').style.width = (boss.health / boss.maxHealth) * 100 + '%'; // Cập nhật boss HP
+    } else {
+        document.getElementById('bossHPBar').style.display = 'none'; // Ẩn nếu không có boss
+    }
+}
+
+// =====================
+// AUDIO SYSTEM - Sử dụng Web Audio API
+// =====================
+function initAudio(){
+    try {
+        audio.context = new (window.AudioContext || window.webkitAudioContext)(); // Tạo context
+        audio.gainNode = audio.context.createGain(); // Gain node
+        audio.gainNode.connect(audio.context.destination); // Connect
+    } catch(e) { audioEnabled = false; } // Nếu không hỗ trợ, tắt
+}
+
+function playSound(type){
+    if(!audioEnabled) return; // Nếu tắt, return
+    let oscillator = audio.context.createOscillator(); // Tạo oscillator
+    let gainNode = audio.context.createGain(); // Gain cho sound
+    oscillator.connect(gainNode); gainNode.connect(audio.gainNode);
+    switch(type){
+        case 'jump': oscillator.frequency.setValueAtTime(440, audio.context.currentTime); gainNode.gain.setValueAtTime(0.1, audio.context.currentTime); break; // Âm jump
+        case 'dash': oscillator.frequency.setValueAtTime(880, audio.context.currentTime); gainNode.gain.setValueAtTime(0.1, audio.context.currentTime); break; // Âm dash
+        case 'hit': oscillator.frequency.setValueAtTime(220, audio.context.currentTime); gainNode.gain.setValueAtTime(0.2, audio.context.currentTime); break; // Âm hit
+        case 'coin': oscillator.frequency.setValueAtTime(660, audio.context.currentTime); gainNode.gain.setValueAtTime(0.1, audio.context.currentTime); break; // Âm coin
+        case 'trap': oscillator.frequency.setValueAtTime(110, audio.context.currentTime); gainNode.gain.setValueAtTime(0.3, audio.context.currentTime); break; // Âm trap
+    }
+    oscillator.start(); // Start
+    oscillator.stop(audio.context.currentTime + 0.1); // Stop sau 0.1s
+}
+
+function toggleAudio(){
+    audioEnabled = !audioEnabled; // Toggle
+    if(audioEnabled) audio.context.resume(); else audio.context.suspend(); // Resume/suspend
+}
+
+// =====================
+// MENUS & SCREENS - Quản lý menus
 // =====================
 function showMenu(){
-    document.getElementById('menuScreen').classList.remove('hide');
-    document.getElementById('deathScreen').classList.add('hide');
-    document.getElementById('shopScreen').classList.add('hide');
-    document.getElementById('optionsScreen').classList.add('hide');
-    document.getElementById('leaderboardScreen').classList.add('hide');
-    document.getElementById('creditsScreen').classList.add('hide');
-    document.getElementById('bossIntro').classList.add('hide');
-    gameState='menu';
+    document.getElementById('menuScreen').classList.remove('hide'); // Hiển thị menu
+    document.getElementById('deathScreen').classList.add('hide'); // Ẩn death
+    document.getElementById('winScreen').classList.add('hide'); // Ẩn win
+    gameState = 'menu'; // Set state
 }
+
+function showSettings(){
+    document.getElementById('settingsScreen').classList.remove('hide'); // Hiển thị settings
+    gameState = 'settings'; // Set state
+}
+
+function closeSettings(){
+    document.getElementById('settingsScreen').classList.add('hide'); // Ẩn settings
+    gameState = 'menu'; // Quay về menu
+}
+
 function showShop(){
-    document.getElementById('shopScreen').classList.remove('hide');
-    document.getElementById('menuScreen').classList.add('hide');
-    gameState='shop';
+    document.getElementById('shopScreen').classList.remove('hide'); // Hiển thị shop
+    gameState = 'shop'; // Set state
 }
-function showDeath(){
-    document.getElementById('deathScreen').classList.remove('hide');
-    gameState='dead';
+
+function closeShop(){
+    document.getElementById('shopScreen').classList.add('hide'); // Ẩn shop
+    gameState = 'playing'; // Quay về playing
 }
-function showOptions(){
-    document.getElementById('optionsScreen').classList.remove('hide');
-    document.getElementById('menuScreen').classList.add('hide');
-    gameState='options';
-}
-function closeOptions(){
-    document.getElementById('optionsScreen').classList.add('hide');
-    gameState='menu';
-}
+
 function showLeaderboard(){
-    let scores = JSON.parse(localStorage.getItem('scores') || '[]');
-    document.getElementById('leaderboardList').innerHTML = scores.length ? scores.map((s,i)=>`${i+1}. ${s}`).join('<br>') : 'No records yet';
-    document.getElementById('leaderboardScreen').classList.remove('hide');
-    document.getElementById('menuScreen').classList.add('hide');
-    gameState='leaderboard';
+    let scores = JSON.parse(localStorage.getItem('scores') || '[]'); // Lấy scores
+    document.getElementById('leaderboardList').innerHTML = scores.length ? scores.map((s, i) => `${i+1}. ${s}`).join('<br>') : 'No records yet'; // Hiển thị
+    document.getElementById('leaderboardScreen').classList.remove('hide'); // Hiển thị screen
+    gameState = 'leaderboard'; // Set state
 }
+
 function closeLeaderboard(){
-    document.getElementById('leaderboardScreen').classList.add('hide');
-    gameState='menu';
+    document.getElementById('leaderboardScreen').classList.add('hide'); // Ẩn
+    gameState = 'menu'; // Quay về menu
 }
+
 function showCredits(){
-    document.getElementById('creditsScreen').classList.remove('hide');
-    document.getElementById('menuScreen').classList.add('hide');
-    gameState='credits';
+    document.getElementById('creditsScreen').classList.remove('hide'); // Hiển thị credits
+    gameState = 'credits'; // Set state
 }
+
+function closeCredits(){
+    document.getElementById('creditsScreen').classList.add('hide'); // Ẩn
+    gameState = 'menu'; //
+   // =====================
+// PHẦN 4: GAME LOOP & MAIN FUNCTIONS - Vòng lặp chính và các hàm core (đã sửa để tích hợp với phần 1-3)
+// =====================
+function gameLoop(timestamp){
+    if(gameState !== 'playing') return; // Chỉ chạy khi đang chơi
+    deltaTime = (timestamp - lastTime) / 1000; // Tính deltaTime (giây)
+    lastTime = timestamp;
+    frameCount++; // Đếm frame
+    if(timestamp - lastFpsUpdate >= 1000){ // Cập nhật FPS mỗi giây
+        fps = frameCount;
+        frameCount = 0;
+        lastFpsUpdate = timestamp;
+    }
+
+    update(deltaTime); // Cập nhật logic (gọi các hàm từ phần 3)
+    render(); // Vẽ (gọi render functions từ phần 3)
+    requestAnimationFrame(gameLoop); // Lặp lại
+}
+
+function update(dt){
+    handleInput(); // Xử lý input (từ phần 3)
+    updatePlayer(dt); // Cập nhật player (từ phần 3)
+    updateEnemies(dt); // Cập nhật enemies (từ phần 3)
+    updateBoss(dt); // Cập nhật boss (từ phần 3)
+    updateParticles(dt); // Cập nhật particles (từ phần 3)
+    updateCamera(); // Cập nhật camera (từ phần 3)
+    checkBiome(); // Kiểm tra biome (từ phần 3)
+    spawnEnvironmentParticles(); // Sinh particles môi trường (từ phần 3)
+    updateUI(); // Cập nhật UI (từ phần 3)
+}
+
+function render(){
+    ctx.clearRect(0, 0, width, height); // Xóa canvas
+    ctx.save(); // Save context
+    ctx.translate(-camera.x, -camera.y); // Translate theo camera
+    renderPlatforms(); // Vẽ platforms (từ phần 3)
+    renderTraps(); // Vẽ traps (từ phần 3)
+    renderPortals(); // Vẽ portals (từ phần 3)
+    renderEnemies(); // Vẽ enemies (từ phần 3)
+    renderPlayer(); // Vẽ player (từ phần 3)
+    renderParticles(); // Vẽ particles (từ phần 3)
+    ctx.restore(); // Restore context
+}
+
+function startGame(){
+    initPlayer(); // Khởi tạo player (từ phần 3)
+    generatePlatforms(); // Tạo platforms (từ phần 3)
+    initBiomes(); // Khởi tạo biomes (từ phần 3)
+    initBosses(); // Khởi tạo bosses (từ phần 3)
+    initAudio(); // Khởi tạo audio (từ phần 3)
+    // Reset trạng thái
+    gameState = 'playing';
+    lastTime = performance.now();
+    lastFpsUpdate = lastTime;
+    frameCount = 0;
+    document.getElementById('menuScreen').classList.add('hide'); // Ẩn menu
+    document.getElementById('pauseScreen').classList.add('hide'); // Ẩn pause
+    gameLoop(performance.now()); // Bắt đầu loop
+}
+
+function pauseGame(){
+    gameState = 'paused'; // Set paused
+    document.getElementById('pauseScreen').classList.remove('hide'); // Hiển thị pause screen
+    showNotification('Game Paused'); // Thông báo
+}
+
+function resumeGame(){
+    gameState = 'playing'; // Set playing
+    document.getElementById('pauseScreen').classList.add('hide'); // Ẩn pause screen
+    lastTime = performance.now(); // Reset thời gian
+    gameLoop(performance.now()); // Tiếp tục loop
+}
+
+function restartGame(){
+    // Reset game như startGame nhưng không ẩn menu
+    initPlayer();
+    generatePlatforms();
+    initBiomes();
+    initBosses();
+    boss = null; bossIndex = 0;
+    coins = 0; score = 0; combo = 0; stamina = maxStamina;
+    gameState = 'playing';
+    lastTime = performance.now();
+    lastFpsUpdate = lastTime;
+    frameCount = 0;
+    document.getElementById('deathScreen').classList.add('hide'); // Ẩn death screen
+    gameLoop(performance.now());
+}
+
+function gameOver(){
+    gameState = 'dead'; // Set dead
+    document.getElementById('deathScreen').classList.remove('hide'); // Hiển thị death screen
+    // Lưu score
+    let scores = JSON.parse(localStorage.getItem('scores') || '[]');
+    scores.push(score);
+    scores.sort((a, b) => b - a).splice(10); // Top 10
+    localStorage.setItem('scores', JSON.stringify(scores));
+    showNotification('Game Over! Score: ' + score);
+}
+
+function winGame(){
+    gameState = 'win'; // Set win
+    document.getElementById('winScreen').classList.remove('hide'); // Hiển thị win screen
+    // Unlock achievement "Boss Killer"
+    let achievements = JSON.parse(localStorage.getItem('achievements') || '[]');
+    if(!achievements.includes('Boss Killer')) achievements.push('Boss Killer');
+    localStorage.setItem('achievements', JSON.stringify(achievements));
+    showNotification('You Win!');
+}
+
+// =====================
+// MENU FUNCTIONS BỔ SUNG (đã sửa để hoàn chỉnh, tích hợp với phần 3)
+// =====================
+function showAchievements(){
+    let achievements = JSON.parse(localStorage.getItem('achievements') || '[]');
+    document.getElementById('achievementList').innerHTML = achievements.length ? achievements.map(a => `<li>${a}</li>`).join('') : '<li>No achievements yet</li>';
+    document.getElementById('achievementScreen').classList.remove('hide');
+    gameState = 'achievements';
+}
+
+function closeAchievements(){
+    document.getElementById('achievementScreen').classList.add('hide');
+    gameState = 'menu';
+}
+
+function toggleDebug(){
+    // Toggle debug mode (giả định có biến debugMode)
+    if(typeof debugMode === 'undefined') debugMode = false;
+    debugMode = !debugMode;
+    showNotification('Debug Mode: ' + (debugMode ? 'ON' : 'OFF'));
+    // Có thể thêm hiển thị vị trí player, v.v. nếu cần
+}
+
+function buyUpgrade(type){
+    let cost = 10; // Giá chung
+    if(coins >= cost){
+        coins -= cost;
+        switch(type){
+            case 'speed': upgrades.speed += 1; player.speed += 1; break;
+            case 'jump': upgrades.jump += 1; player.jump += 1; break;
+            case 'dash': upgrades.dash += 1; player.dash += 1; break;
+            case 'shield': upgrades.shield = true; player.shield = true; break;
+            case 'revive': upgrades.revive += 1; break;
+            case 'skin': upgrades.skin += 1; break;
+        }
+        localStorage.setItem('upgrades', JSON.stringify(upgrades)); // Lưu upgrades
+        updateUI(); // Cập nhật UI
+        showNotification(type + ' Upgraded!');
+    } else {
+        showNotification('Not enough coins!');
+    }
+}
+
+// Sửa showCredits (bị cắt trong code gốc)
 function closeCredits(){
     document.getElementById('creditsScreen').classList.add('hide');
-    gameState='menu';
+    gameState = 'menu';
 }
-function closeShop(){
+   // =====================
+// PHẦN 5: INPUT HANDLING - Xử lý input từ keyboard và mouse (tích hợp với phần 1-4)
+// =====================
+let mouse = {x: 0, y: 0, down: false}; // Object lưu trạng thái mouse
+
+function handleKeyDown(e){
+    keys[e.code] = true; // Đánh dấu phím nhấn
+    if(e.code === 'Space' && gameState === 'playing'){ // Nhấn Space để nhảy
+        if(player.onGround && stamina >= 20){
+            player.vy = -player.jump; // Nhảy
+            stamina -= 20; // Giảm stamina
+            playSound('jump'); // Phát âm
+            // Unlock achievement "First Jump" nếu chưa
+            let achievements = JSON.parse(localStorage.getItem('achievements') || '[]');
+            if(!achievements.includes('First Jump')) achievements.push('First Jump');
+            localStorage.setItem('achievements', JSON.stringify(achievements));
+        }
+        e.preventDefault(); // Ngăn scroll trang
+    }
+    if(e.code === 'KeyD' && gameState === 'playing'){ // Nhấn D để dash
+        if(stamina >= 30 && player.dashCooldown <= 0){
+            player.dashing = true; // Bật dash
+            player.vx += player.facingRight ? player.dash : -player.dash; // Dash theo hướng
+            stamina -= 30; // Giảm stamina
+            player.dashCooldown = 0.5; // Cooldown 0.5s
+            playSound('dash'); // Phát âm
+            setTimeout(() => player.dashing = false, 200); // Tắt dash sau 200ms
+        }
+    }
+    if(e.code === 'KeyS' && gameState === 'playing'){ // Nhấn S để shield
+        if(stamina >= 10){
+            player.shield = true; // Bật shield
+            stamina -= 10; // Giảm stamina
+            setTimeout(() => player.shield = false, 1000); // Tắt sau 1s
+        }
+    }
+    if(e.code === 'KeyP'){ // Nhấn P để pause (từ phần 4)
+        if(gameState === 'playing') pauseGame();
+        else if(gameState === 'paused') resumeGame();
+    }
+    if(e.code === 'KeyR'){ // Nhấn R để restart (từ phần 4)
+        restartGame();
+    }
+}
+
+function handleKeyUp(e){
+    keys[e.code] = false; // Đánh dấu phím thả
+}
+
+function handleMouseMove(e){
+    mouse.x = e.clientX - canvas.offsetLeft; // Cập nhật vị trí mouse x (tương đối canvas)
+    mouse.y = e.clientY - canvas.offsetTop; // Cập nhật vị trí mouse y
+}
+
+function handleMouseDown(e){
+    mouse.down = true; // Đánh dấu mouse nhấn
+    if(gameState === 'menu'){ // Nếu ở menu, start game
+        startGame(); // Gọi từ phần 4
+    } else if(gameState === 'playing'){ // Nếu đang chơi, nhảy bằng mouse
+        if(player.onGround && stamina >= 20){
+            player.vy = -player.jump;
+            stamina -= 20;
+            playSound('jump');
+        }
+    }
+}
+
+function handleMouseUp(e){
+    mouse.down = false; // Đánh dấu mouse thả
+}
+
+function updateInput(){
+    if(gameState !== 'playing') return; // Chỉ xử lý khi chơi
+    player.vx = 0; // Reset vx để tránh trượt
+    if(keys['ArrowLeft'] || keys['KeyA']){ // Di chuyển trái
+        player.vx = -player.speed;
+        player.facingRight = false; // Hướng trái
+    }
+    if(keys['ArrowRight'] || keys['KeyD']){ // Di chuyển phải
+        player.vx = player.speed;
+        player.facingRight = true; // Hướng phải
+    }
+    if(keys['ArrowDown'] || keys['KeyS']){ // Ngồi (giảm height)
+        player.h = player.originalH / 2; // Giả định originalH đã set trong initPlayer
+    } else {
+        player.h = player.originalH; // Reset height
+    }
+    // Mobile controls (từ HTML, đã addEventListener trong phần 3)
+    // leftBtn, jumpBtn, dashBtn đã xử lý trong phần 3, nên không cần lặp lại
+}
+
+// Thêm event listeners cho mouse (bổ sung cho phần 3)
+window.addEventListener('mousemove', handleMouseMove);
+window.addEventListener('mousedown', handleMouseDown);
+window.addEventListener('mouseup', handleMouseUp);
+   // =====================
+// PHẦN 6: INITIALIZATION & SETUP - Khởi tạo game và các elements (tích hợp với phần 1-5)
+// =====================
+function initGame(){
+    // Reset player (từ phần 3, nhưng bổ sung originalH)
+    player.x = 100; player.y = height - 150; player.vx = 0; player.vy = 0; player.health = player.maxHealth; player.shield = false; player.dashing = false; player.dashCooldown = 0; player.doubleJump = true; player.facingRight = true; player.originalH = player.h; // Lưu original height
+    // Reset trạng thái game
+    stamina = maxStamina; coins = 0; score = 0; combo = 0; camera.x = 0; camera.y = 0; camera.shake = 0;
+    // Reset arrays
+    platforms = []; enemies = []; traps = []; portals = []; particles = []; particlePool = []; projectilePool = [];
+    // Tạo platforms cơ bản (từ phần 3, nhưng mở rộng)
+    for(let i = 0; i < 50; i++){ // Tăng số platforms
+        let w = 100 + Math.random() * 200;
+        let hasCoin = Math.random() < 0.2; // Tăng tỷ lệ coin
+        platforms.push({x: i * 250 + Math.random() * 100, y: height - 50 - Math.random() * 100, w: w, h: 20, type: 'normal', coin: hasCoin, collected: false});
+    }
+    // Tạo enemies (từ phần 3)
+    for(let i = 0; i < 10; i++){
+        enemies.push({x: 300 + i * 400, y: height - 100, w: 40, h: 40, vx: 0});
+    }
+    // Tạo traps (từ phần 3, bổ sung laser)
+    traps.push({x: 600, y: height - 100, w: 50, h: 20, type: 'spike'});
+    traps.push({x: 1200, y: height - 200, w: 100, h: 10, type: 'laser'}); // Thêm laser trap
+    // Tạo portals (từ phần 3)
+    portals.push({x: 1000, y: height - 150, w: 50, h: 50, targetX: 1200, targetY: height - 200});
+    portals.push({x: 2000, y: height - 250, w: 50, h: 50, targetX: 2200, targetY: height - 300}); // Thêm portal
+    // Khởi tạo biomes (từ phần 3)
+    initBiomes();
+    // Khởi tạo bosses (từ phần 3)
+    initBosses();
+    boss = null; bossIndex = 0;
+    // Khởi tạo audio (từ phần 3)
+    initAudio();
+    // Ẩn tất cả screens trừ menu
+    document.getElementById('menuScreen').classList.remove('hide');
+    document.getElementById('pauseScreen').classList.add('hide');
+    document.getElementById('settingsScreen').classList.add('hide');
     document.getElementById('shopScreen').classList.add('hide');
-    gameState='playing';
+    document.getElementById('leaderboardScreen').classList.add('hide');
+    document.getElementById('creditsScreen').classList.add('hide');
+    document.getElementById('achievementScreen').classList.add('hide');
+    document.getElementById('loadingScreen').classList.add('hide');
+    document.getElementById('winScreen').classList.add('hide');
+    document.getElementById('deathScreen').classList.add('hide');
+    // Load upgrades từ localStorage (từ phần 1)
+    upgrades = JSON.parse(localStorage.getItem('upgrades') || '{"speed":0, "jump":0, "dash":0, "shield":false, "revive":0, "skin":0}');
+    // Cập nhật UI ban đầu
+    updateUI();
 }
 
-// =====================
-// START / RESTART
-// =====================
-function startGame(){ 
-    document.getElementById('menuScreen').classList.add('hide'); 
-    gameState='playing'; 
-    initGame(); 
-}
-function restartGame(){ 
-    initPlayer(); 
-    player.x=width/2; 
-    player.y=height-150; 
-    gameState='playing'; 
-    requestAnimationFrame(loop); 
+function init(){
+    // Setup canvas (từ phần 1)
+    width = canvas.width = window.innerWidth;
+    height = canvas.height = window.innerHeight;
+    // Thêm event listeners (từ phần 3 và 5)
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
+    window.addEventListener('resize', () => {
+        width = canvas.width = window.innerWidth;
+        height = canvas.height = window.innerHeight;
+    });
+    // Mobile controls (từ phần 3)
+    document.getElementById('leftBtn').addEventListener('touchstart', () => keys['ArrowLeft'] = true);
+    document.getElementById('leftBtn').addEventListener('touchend', () => keys['ArrowLeft'] = false);
+    document.getElementById('jumpBtn').addEventListener('touchstart', () => keys['Space'] = true);
+    document.getElementById('jumpBtn').addEventListener('touchend', () => keys['Space'] = false);
+    document.getElementById('dashBtn').addEventListener('touchstart', () => keys['KeyX'] = true);
+    document.getElementById('dashBtn').addEventListener('touchend', () => keys['KeyX'] = false);
+    // Hiển thị loading screen tạm thời
+    document.getElementById('loadingScreen').classList.remove('hide');
+    setTimeout(() => {
+        document.getElementById('loadingScreen').classList.add('hide');
+        showMenu(); // Hiển thị menu (từ phần 4)
+    }, 1000); // Giả lập load 1s
 }
 
+// Gọi init khi window load
+window.onload = init;
+   // =====================
+// PHẦN 7: EVENT LISTENERS & CONTROLS - Các event listeners cho UI (tích hợp với phần 1-6)
 // =====================
-// MOBILE BUTTONS
+// Menu buttons (từ HTML)
+document.getElementById('startBtn').addEventListener('click', startGame); // Gọi startGame từ phần 4
+document.getElementById('settingsBtn').addEventListener('click', showSettings); // Gọi showSettings từ phần 4
+document.getElementById('shopBtn').addEventListener('click', showShop); // Gọi showShop từ phần 4
+document.getElementById('leaderboardBtn').addEventListener('click', showLeaderboard); // Gọi showLeaderboard từ phần 4
+document.getElementById('creditsBtn').addEventListener('click', showCredits); // Gọi showCredits từ phần 4
+document.getElementById('achievementsBtn').addEventListener('click', showAchievements); // Gọi showAchievements từ phần 4
+
+// Settings screen
+document.getElementById('closeSettingsBtn').addEventListener('click', closeSettings); // Gọi closeSettings từ phần 4
+document.getElementById('toggleMusicBtn').addEventListener('click', toggleAudio); // Gọi toggleAudio từ phần 3
+document.getElementById('toggleDebugBtn').addEventListener('click', toggleDebug); // Gọi toggleDebug từ phần 4
+
+// Shop screen
+document.getElementById('closeShopBtn').addEventListener('click', closeShop); // Gọi closeShop từ phần 4
+document.getElementById('buySpeedBtn').addEventListener('click', () => buyUpgrade('speed')); // Gọi buyUpgrade từ phần 4
+document.getElementById('buyJumpBtn').addEventListener('click', () => buyUpgrade('jump'));
+document.getElementById('buyDashBtn').addEventListener('click', () => buyUpgrade('dash'));
+document.getElementById('buyShieldBtn').addEventListener('click', () => buyUpgrade('shield'));
+document.getElementById('buyReviveBtn').addEventListener('click', () => buyUpgrade('revive'));
+document.getElementById('buySkinBtn').addEventListener('click', () => buyUpgrade('skin'));
+
+// Leaderboard screen
+document.getElementById('closeLeaderboardBtn').addEventListener('click', closeLeaderboard); // Gọi closeLeaderboard từ phần 4
+
+// Credits screen
+document.getElementById('closeCreditsBtn').addEventListener('click', closeCredits); // Gọi closeCredits từ phần 4
+
+// Achievements screen
+document.getElementById('closeAchievementsBtn').addEventListener('click', closeAchievements); // Gọi closeAchievements từ phần 4
+
+// Pause screen
+document.getElementById('resumeBtn').addEventListener('click', resumeGame); // Gọi resumeGame từ phần 4
+document.getElementById('pauseSettingsBtn').addEventListener('click', showSettings); // Gọi showSettings từ phần 4
+document.getElementById('pauseMenuBtn').addEventListener('click', showMenu); // Gọi showMenu từ phần 4
+
+// Death screen
+document.getElementById('retryBtn').addEventListener('click', restartGame); // Gọi restartGame từ phần 4
+document.getElementById('deathMenuBtn').addEventListener('click', showMenu); // Gọi showMenu từ phần 4
+
+// Win screen
+document.getElementById('winMenuBtn').addEventListener('click', showMenu); // Gọi showMenu từ phần 4
+
+// In-game UI
+document.getElementById('pauseBtn').addEventListener('click', pauseGame); // Gọi pauseGame từ phần 4
+
+// Bổ sung: Fullscreen toggle (thêm button với ID 'fullscreenBtn' trong HTML nếu muốn)
+document.getElementById('fullscreenBtn').addEventListener('click', () => {
+    if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen(); // Vào fullscreen
+    } else {
+        document.exitFullscreen(); // Thoát fullscreen
+    }
+});
+
+// Bổ sung: Save/Load game (thêm buttons với ID 'saveBtn', 'loadBtn' trong HTML nếu muốn, gọi từ phần 8)
+document.getElementById('saveBtn').addEventListener('click', saveGame); // Gọi saveGame từ phần 8
+document.getElementById('loadBtn').addEventListener('click', loadGame); // Gọi loadGame từ phần 8
+   // =====================
+// PHẦN 8: UTILITY FUNCTIONS - Các hàm tiện ích (tích hợp với phần 1-7)
 // =====================
-document.getElementById('leftBtn').addEventListener('touchstart',()=>keys['ArrowLeft']=true);
-document.getElementById('leftBtn').addEventListener('touchend',()=>keys['ArrowLeft']=false);
-document.getElementById('jumpBtn').addEventListener('touchstart',()=>keys['Space']=true);
-document.getElementById('jumpBtn').addEventListener('touchend',()=>keys['Space']=
+function random(min, max){
+    return Math.random() * (max - min) + min; // Random số thực giữa min và max
+}
+
+function clamp(value, min, max){
+    return Math.min(Math.max(value, min), max); // Giới hạn giá trị trong khoảng min-max
+}
+
+function distance(x1, y1, x2, y2){
+    return Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2); // Tính khoảng cách Euclidean
+}
+
+function checkCollision(a, b){
+    return a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y; // Kiểm tra collision AABB
+}
+
+function showNotification(text){
+    let notif = document.getElementById('notification'); // Lấy element notification
+    notif.innerText = text; // Set text
+    notif.classList.remove('hide'); // Hiển thị
+    setTimeout(() => notif.classList.add('hide'), 2000); // Ẩn sau 2s
+}
+
+function saveGame(){
+    let saveData = {
+        player: player,
+        platforms: platforms,
+        enemies: enemies,
+        traps: traps,
+        portals: portals,
+        boss: boss,
+        bossIndex: bossIndex,
+        coins: coins,
+        score: score,
+        stamina: stamina,
+        upgrades: upgrades,
+        currentBiome: currentBiome
+    }; // Dữ liệu cần lưu
+    localStorage.setItem('saveData', JSON.stringify(saveData)); // Lưu vào localStorage
+    showNotification('Game Saved!'); // Thông báo
+}
+
+function loadGame(){
+    let saveData = JSON.parse(localStorage.getItem('saveData')); // Lấy từ localStorage
+    if(saveData){
+        Object.assign(player, saveData.player); // Load player
+        platforms = saveData.platforms; // Load platforms
+        enemies = saveData.enemies; // Load enemies
+        traps = saveData.traps; // Load traps
+        portals = saveData.portals; // Load portals
+        boss = saveData.boss; // Load boss
+        bossIndex = saveData.bossIndex; // Load boss index
+        coins = saveData.coins; // Load coins
+        score = saveData.score; // Load score
+        stamina = saveData.stamina; // Load stamina
+        upgrades = saveData.upgrades; // Load upgrades
+        currentBiome = saveData.currentBiome; // Load biome
+        updateUI(); // Cập nhật UI
+        showNotification('Game Loaded!'); // Thông báo
+    } else {
+        showNotification('No save data found!'); // Thông báo nếu không có
+    }
+}
+
+// Bổ sung: Hàm để tạo checkpoints (có thể dùng trong tương lai)
+function createCheckpoint(x, y){
+    checkpoints.push({x: x, y: y}); // Thêm checkpoint
+}
+
+// Bổ sung: Hàm để respawn tại checkpoint gần nhất
+function respawnAtCheckpoint(){
+    if(checkpoints.length > 0){
+        let nearest = checkpoints.reduce((prev, curr) => distance(player.x, player.y, prev.x, prev.y) < distance(player.x, player.y, curr.x, curr.y) ? prev : curr);
+        player.x = nearest.x; // Respawn x
+        player.y = nearest.y; // Respawn y
+        player.health = player.maxHealth; // Reset HP
+        showNotification('Respawned at checkpoint!'); // Thông báo
+    }
+}
+
+// Bổ sung: Hàm để tính combo (tăng khi nhảy liên tiếp)
+function increaseCombo(){
+    combo++; // Tăng combo
+    if(combo % 5 === 0) score += combo * 10; // Bonus score mỗi 5 combo
+}
+
+// Bổ sung: Hàm để reset combo
+function resetCombo(){
+    combo = 0; // Reset combo
+}
+
+// Bổ sung: Hàm debug (hiển thị info nếu debugMode on)
+function debugInfo(){
+    if(debugMode){
+        ctx.fillStyle = 'white'; // Màu trắng
+        ctx.font = '12px monospace'; // Font nhỏ
+        ctx.fillText(`Player: (${player.x.toFixed(0)}, ${player.y.toFixed(0)}) | FPS: ${fps} | Coins: ${coins}`, 10, height - 30); // Hiển thị info
+    }
+}
+
+// Gọi debugInfo trong render (bổ sung vào phần 4 render)
+function render(){
+    ctx.clearRect(0, 0, width, height);
+    ctx.save();
+    ctx.translate(-camera.x, -camera.y);
+    renderPlatforms();
+    renderTraps();
+    renderPortals();
+    renderEnemies();
+    renderPlayer();
+    renderParticles();
+    debugInfo(); // Thêm debug info
+    ctx.restore();
+}
