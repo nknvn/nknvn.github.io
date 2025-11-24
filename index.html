@@ -125,12 +125,12 @@ audio { display: none; }
     <!-- SHOP -->
     <div id="shopScreen" class="hide">
         <div>SHOP</div>
-        <button class="uiButton" onclick="buyUpgrade('speed')">SPEED</button>
-        <button class="uiButton" onclick="buyUpgrade('jump')">JUMP</button>
-        <button class="uiButton" onclick="buyUpgrade('dash')">DASH</button>
-        <button class="uiButton" onclick="buyUpgrade('shield')">SHIELD</button>
-        <button class="uiButton" onclick="buyUpgrade('revive')">REVIVE</button>
-        <button class="uiButton" onclick="buyUpgrade('skin')">SKIN</button>
+        <button class="uiButton" onclick="buyUpgrade('speed')">SPEED (10 coins)</button>
+        <button class="uiButton" onclick="buyUpgrade('jump')">JUMP (10 coins)</button>
+        <button class="uiButton" onclick="buyUpgrade('dash')">DASH (10 coins)</button>
+        <button class="uiButton" onclick="buyUpgrade('shield')">SHIELD (10 coins)</button>
+        <button class="uiButton" onclick="buyUpgrade('revive')">REVIVE (10 coins)</button>
+        <button class="uiButton" onclick="buyUpgrade('skin')">SKIN (10 coins)</button>
         <button class="uiButton" onclick="closeShop()">BACK</button>
     </div>
 
@@ -335,6 +335,8 @@ function checkBiome(){
 // SHOP & UPGRADES
 // =====================
 function buyUpgrade(type){
+    if(coins < 10) return; // Not enough coins
+    coins -= 10;
     switch(type){
         case 'speed': upgrades.speed+=1; player.speed=5+upgrades.speed; break;
         case 'jump': upgrades.jump+=1; player.jump=15+upgrades.jump; break;
@@ -343,139 +345,9 @@ function buyUpgrade(type){
         case 'revive': upgrades.revive+=1; break;
         case 'skin': upgrades.skin+=1; break;
     }
-    coins+=10;
     audio.coin.play();
 }
-function closeShop(){ document.getElementById('shopScreen').classList.add('hide'); gameState='playing'; }
-function startGame(){ document.getElementById('menuScreen').classList.add('hide'); gameState='playing'; initGame(); }
-function restartGame(){ initPlayer(); player.x=width/2; player.y=height-150; gameState='playing'; requestAnimationFrame(loop); }
-function gameOver(){ showDeath(); }
 
-// =====================
-// MOBILE BUTTONS
-// =====================
-document.getElementById('leftBtn').addEventListener('touchstart',()=>keys['ArrowLeft']=true);
-document.getElementById('leftBtn').addEventListener('touchend',()=>keys['ArrowLeft']=false);
-document.getElementById('jumpBtn').addEventListener('touchstart',()=>keys['Space']=true);
-document.getElementById('jumpBtn').addEventListener('touchend',()=>keys['Space']=false);
-document.getElementById('dashBtn').addEventListener('touchstart',()=>keys['KeyX']=true);
-document.getElementById('dashBtn').addEventListener('touchend',()=>keys['KeyX']=false);
-
-// =====================
-// KEY SHORTCUTS
-// =====================
-window.addEventListener('keydown', e=>{
-    if(e.code==='KeyR') restartGame();
-    if(e.code==='KeyM') showMenu();
-    if(e.code==='KeyS') showShop();
-    if(e.code==='KeyO') showOptions();
-    if(e.code==='KeyL') showLeaderboard();
-});
-// =====================
-// PARTICLE SYSTEM
-// =====================
-function createParticle(x,y,vx=0,vy=0,life=1,color='white'){
-    particles.push({x:x,y:y,vx:vx,vy:vy,life:life,color:color});
-}
-function updateParticles(dt){
-    for(let i=particles.length-1;i>=0;i--){
-        let p=particles[i];
-        p.x+=p.vx*dt*60; p.y+=p.vy*dt*60;
-        p.life-=dt;
-        if(p.life<=0) particles.splice(i,1);
-    }
-}
-function renderParticles(){
-    for(let p of particles){
-        ctx.fillStyle=p.color;
-        ctx.fillRect(p.x,p.y,5,5);
-    }
-}
-function spawnEnvironmentParticles(){
-    switch(biomes[currentBiome].name){
-        case 'Neon City':
-            for(let i=0;i<2;i++) createParticle(Math.random()*width+camera.x,Math.random()*height+camera.y,0,1,1,'cyan');
-            break;
-        case 'Lava Hell':
-            for(let i=0;i<2;i++) createParticle(Math.random()*width+camera.x,Math.random()*height+camera.y,0,-1,1,'orange');
-            break;
-        case 'Frozen Void':
-            for(let i=0;i<2;i++) createParticle(Math.random()*width+camera.x,Math.random()*height+camera.y,0,1,1,'lightblue');
-            break;
-        case 'Toxic Swamp':
-            for(let i=0;i<2;i++) createParticle(Math.random()*width+camera.x,Math.random()*height+camera.y,0,1,1,'green');
-            break;
-        case 'Starfield':
-            for(let i=0;i<2;i++) createParticle(Math.random()*width+camera.x,Math.random()*height+camera.y,0,0,1,'white');
-            break;
-        case 'Quantum Forest':
-            for(let i=0;i<2;i++) createParticle(Math.random()*width+camera.x,Math.random()*height+camera.y,0,0.5,1,'lime');
-            break;
-        case 'Infinity Ruins':
-            for(let i=0;i<2;i++) createParticle(Math.random()*width+camera.x,Math.random()*height+camera.y,0,0.5,1,'magenta');
-            break;
-        case 'Rainbow Horizon':
-            for(let i=0;i<5;i++){
-                let colors=['red','orange','yellow','green','blue','indigo','violet'];
-                createParticle(Math.random()*width+camera.x,Math.random()*height+camera.y,0,Math.random(),1,colors[Math.floor(Math.random()*colors.length)]);
-            }
-            break;
-    }
-}
-
-// Motion trail
-setInterval(()=>{
-    if(gameState==='playing') createParticle(player.x+player.w/2,player.y+player.h,(Math.random()-0.5)*1,-Math.random()*1,0.5,'yellow');
-},50);
-
-// =====================
-// ENEMIES & BOSS
-// =====================
-class Boss{
-    constructor(name,x,y,w,h){
-        this.name=name; this.x=x; this.y=y; this.w=w; this.h=h;
-        this.phase=1; this.health=100; this.maxHealth=100; this.rage=false;
-        this.projectiles=[]; this.active=true;
-    }
-    update(dt){
-        if(!this.active) return;
-        if(this.health<=this.maxHealth/2 && !this.rage){ this.rage=true; this.phase=4; }
-        switch(this.phase){
-            case 1: this.phaseOne(dt); break;
-            case 2: this.phaseTwo(dt); break;
-            case 3: this.phaseThree(dt); break;
-            case 4: this.phaseFour(dt); break;
-            case 5: this.phaseFive(dt); break;
-        }
-        for(let i=this.projectiles.length-1;i>=0;i--){
-            let p=this.projectiles[i];
-            p.x+=p.vx*dt*60; p.y+=p.vy*dt*60; p.life-=dt;
-            if(p.life<=0 || p.x<camera.x-100 || p.x>camera.x+width+100) this.projectiles.splice(i,1);
-        }
-    }
-    phaseOne(dt){ this.x+=Math.sin(Date.now()/500)*1.5; this.shootCurved('cyan'); }
-    phaseTwo(dt){ if(player.x<this.x) this.x-=2; else this.x+=2; if(Math.random()<0.01) this.groundSmash(); }
-    phaseThree(dt){ this.y=200+Math.sin(Date.now()/400)*50; if(Math.random()<0.02) this.shootCurved('red'); }
-    phaseFour(dt){ this.x+=Math.sin(Date.now()/300)*3; this.shootCurved('orange'); }
-    phaseFive(dt){ if(Math.random()<0.05) this.ultimateAttack(); }
-    shootCurved(color='white'){ if(Math.random()<0.05) this.projectiles.push({x:this.x+this.w/2,y:this.y+this.h/2,vx:(Math.random()-0.5)*5,vy:3+Math.random()*2,life:5,color:color}); }
-    groundSmash(){ for(let i=0;i<5;i++) createParticle(this.x+this.w/2,this.y+this.h,(Math.random()-0.5)*3,-Math.random()*2,1,'orange'); }
-    ultimateAttack(){ for(let i=0;i<20;i++) this.projectiles.push({x:this.x+this.w/2,y:this.y+this.h/2,vx:(Math.random()-0.5)*10,vy:Math.random()*5,life:5,color:'red'}); }
-    render(){
-        if(!this.active) return;
-        ctx.fillStyle=this.rage?'orange':'red'; ctx.fillRect(this.x,this.y,this.w,this.h);
-        ctx.fillStyle='black'; ctx.fillRect(this.x,this.y-10,this.w,5);
-        ctx.fillStyle='lime'; ctx.fillRect(this.x,this.y-10,this.w*(this.health/this.maxHealth),5);
-        for(let p of this.projectiles){ ctx.fillStyle=p.color; ctx.fillRect(p.x,p.y,5,5); }
-    }
-}
-
-// Initialize bosses
-bosses=[new Boss('Shadow Orb',width+200,200,80,80),new Boss('Titan Runner',width+400,height-150,100,120),new Boss('Sky Serpent',width+600,150,120,60)];
-function updateBoss(dt){ if(!boss && player.x>500) boss=bosses[0]; if(boss) boss.update(dt); }
-function renderEnemies(){ for(let e of enemies){ ctx.fillStyle='red'; ctx.fillRect(e.x,e.y,e.w,e.h); } if(boss) boss.render(); }
-function spawnEnemies(){ for(let i=0;i<5;i++){ enemies.push({x:Math.random()*2000,y:height-100,w:40,h:60,vx:0,vy:0}); } }
-spawnEnemies();
 // =====================
 // SHOW / HIDE SCREENS
 // =====================
@@ -483,6 +355,9 @@ function showMenu(){
     document.getElementById('menuScreen').classList.remove('hide');
     document.getElementById('deathScreen').classList.add('hide');
     document.getElementById('shopScreen').classList.add('hide');
+    document.getElementById('optionsScreen').classList.add('hide');
+    document.getElementById('leaderboardScreen').classList.add('hide');
+    document.getElementById('creditsScreen').classList.add('hide');
     document.getElementById('bossIntro').classList.add('hide');
     gameState='menu';
 }
@@ -496,26 +371,33 @@ function showDeath(){
     gameState='dead';
 }
 function showOptions(){
-    alert('OPTIONS: Audio toggle with M, other keys customizable');
+    document.getElementById('optionsScreen').classList.remove('hide');
+    document.getElementById('menuScreen').classList.add('hide');
+    gameState='options';
+}
+function closeOptions(){
+    document.getElementById('optionsScreen').classList.add('hide');
+    gameState='menu';
 }
 function showLeaderboard(){
-    let scores=JSON.parse(localStorage.getItem('scores')||'[]');
-    alert('Leaderboard:\n'+scores.map((s,i)=>`${i+1}. ${s}`).join('\n'));
+    let scores = JSON.parse(localStorage.getItem('scores') || '[]');
+    document.getElementById('leaderboardList').innerHTML = scores.length ? scores.map((s,i)=>`${i+1}. ${s}`).join('<br>') : 'No records yet';
+    document.getElementById('leaderboardScreen').classList.remove('hide');
+    document.getElementById('menuScreen').classList.add('hide');
+    gameState='leaderboard';
 }
-
-// =====================
-// UPGRADES / SHOP LOGIC
-// =====================
-function buyUpgrade(type){
-    switch(type){
-        case 'speed': upgrades.speed+=1; player.speed=5+upgrades.speed; break;
-        case 'jump': upgrades.jump+=1; player.jump=15+upgrades.jump; break;
-        case 'dash': upgrades.dash+=5; break;
-        case 'shield': upgrades.shield=true; player.shield=true; break;
-        case 'revive': upgrades.revive+=1; break;
-        case 'skin': upgrades.skin+=1; break;
-    }
-    audio.coin.play();
+function closeLeaderboard(){
+    document.getElementById('leaderboardScreen').classList.add('hide');
+    gameState='menu';
+}
+function showCredits(){
+    document.getElementById('creditsScreen').classList.remove('hide');
+    document.getElementById('menuScreen').classList.add('hide');
+    gameState='credits';
+}
+function closeCredits(){
+    document.getElementById('creditsScreen').classList.add('hide');
+    gameState='menu';
 }
 function closeShop(){
     document.getElementById('shopScreen').classList.add('hide');
@@ -523,63 +405,19 @@ function closeShop(){
 }
 
 // =====================
-// PLAYER INIT
+// START / RESTART
 // =====================
-function initGame(){
-    initPlayer();
-    generatePlatforms();
-    initBiomes();
-    spawnEnemies();
-    audio.bg.play();
-    lastTime=performance.now();
-    requestAnimationFrame(loop);
+function startGame(){ 
+    document.getElementById('menuScreen').classList.add('hide'); 
+    gameState='playing'; 
+    initGame(); 
 }
-
-// =====================
-// GAME OVER
-// =====================
-function gameOver(){
-    if(upgrades.revive>0){
-        upgrades.revive--;
-        initPlayer();
-    } else {
-        let scores=JSON.parse(localStorage.getItem('scores')||'[]');
-        scores.push(Math.floor(player.x));
-        localStorage.setItem('scores',JSON.stringify(scores));
-        showDeath();
-    }
-}
-
-// =====================
-// GAME LOOP
-// =====================
-function loop(timestamp){
-    const dt=(timestamp-lastTime)/1000;
-    lastTime=timestamp;
-    if(gameState==='playing'){
-        update(dt);
-        render();
-        requestAnimationFrame(loop);
-    }
-}
-function update(dt){
-    handleInput();
-    updatePlayer(dt);
-    updateCamera();
-    updateParticles(dt);
-    spawnEnvironmentParticles();
-    checkBiome();
-    updateBoss(dt);
-}
-function render(){
-    ctx.clearRect(0,0,width,height);
-    ctx.save();
-    ctx.translate(-camera.x,-camera.y);
-    renderPlatforms();
-    renderPlayer();
-    renderParticles();
-    renderEnemies();
-    ctx.restore();
+function restartGame(){ 
+    initPlayer(); 
+    player.x=width/2; 
+    player.y=height-150; 
+    gameState='playing'; 
+    requestAnimationFrame(loop); 
 }
 
 // =====================
@@ -588,19 +426,4 @@ function render(){
 document.getElementById('leftBtn').addEventListener('touchstart',()=>keys['ArrowLeft']=true);
 document.getElementById('leftBtn').addEventListener('touchend',()=>keys['ArrowLeft']=false);
 document.getElementById('jumpBtn').addEventListener('touchstart',()=>keys['Space']=true);
-document.getElementById('jumpBtn').addEventListener('touchend',()=>keys['Space']=false);
-document.getElementById('dashBtn').addEventListener('touchstart',()=>keys['KeyX']=true);
-document.getElementById('dashBtn').addEventListener('touchend',()=>keys['KeyX']=false);
-
-// =====================
-// AUDIO TOGGLE
-// =====================
-function toggleAudio(){
-    if(audio.bg.paused) audio.bg.play();
-    else audio.bg.pause();
-}
-
-// =====================
-// INIT MENU AUTOMATICALLY
-// =====================
-showMenu();
+document.getElementById('jumpBtn').addEventListener('touchend',()=>keys['Space']=
