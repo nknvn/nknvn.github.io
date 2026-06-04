@@ -10,7 +10,7 @@
 margin:0;
 padding:0;
 box-sizing:border-box;
-font-family:Arial, sans-serif;
+font-family:Arial,sans-serif;
 }
 
 body{
@@ -19,13 +19,14 @@ height:100vh;
 display:flex;
 flex-direction:column;
 color:white;
+transition:0.5s;
 }
 
 header{
 background:#343541;
 padding:20px;
 text-align:center;
-font-size:28px;
+font-size:30px;
 font-weight:bold;
 border-bottom:2px solid #444;
 }
@@ -42,12 +43,12 @@ padding:12px;
 margin:10px 0;
 border-radius:15px;
 line-height:1.5;
+word-wrap:break-word;
 }
 
 .user{
 background:#19c37d;
 margin-left:auto;
-color:white;
 }
 
 .bot{
@@ -67,15 +68,16 @@ padding:15px;
 border:none;
 border-radius:10px;
 font-size:16px;
+outline:none;
 }
 
 button{
 margin-left:10px;
 padding:15px 25px;
 background:#19c37d;
-color:white;
 border:none;
 border-radius:10px;
+color:white;
 cursor:pointer;
 font-size:16px;
 }
@@ -83,18 +85,63 @@ font-size:16px;
 button:hover{
 opacity:0.9;
 }
+
+/* CẦU VỒNG */
+
+.rainbow-mode{
+background:linear-gradient(
+45deg,
+red,
+orange,
+yellow,
+green,
+cyan,
+blue,
+purple,
+red
+);
+background-size:400% 400%;
+animation:rainbowBG 6s linear infinite;
+}
+
+@keyframes rainbowBG{
+0%{background-position:0% 50%;}
+50%{background-position:100% 50%;}
+100%{background-position:0% 50%;}
+}
+
+.rainbow-title{
+animation:rainbowText 2s linear infinite;
+}
+
+@keyframes rainbowText{
+0%{color:red;}
+15%{color:orange;}
+30%{color:yellow;}
+45%{color:lime;}
+60%{color:cyan;}
+75%{color:blue;}
+100%{color:violet;}
+}
 </style>
+
 </head>
 <body>
 
-<header>
+<header id="title">
 Chào mừng đến với LGBTAI
 </header>
 
 <div id="chat">
 
 <div class="message bot">
-Xin chào! Tôi là LGBTAI. Hãy hỏi tôi bất cứ điều gì.
+👋 Xin chào! Tôi là LGBTAI.
+
+Hãy thử hỏi tôi những câu cơ bản hoặc nhập:
+
+<b>anh khôi đẹp zai</b>
+
+để mở bí mật 🌈
 </div>
 
 </div>
@@ -106,62 +153,108 @@ Xin chào! Tôi là LGBTAI. Hãy hỏi tôi bất cứ điều gì.
 
 <script>
 
-const answers = {
+const answers={
 
-"xin chào":"Xin chào! Rất vui được gặp bạn.",
+"xin chào":"cô ni chi qua",
+"chào":"hi",
 "bạn tên gì":"Tôi là LGBTAI.",
 "ai tạo ra bạn":"Tôi được tạo ra bởi đội phát triển LGBTAI.",
-"mấy giờ rồi":"Tôi chưa xem được đồng hồ của thiết bị.",
-"hôm nay là ngày gì":"Bạn có thể xem trên thiết bị của mình.",
-"2+2":"2 + 2 = 4.",
-"việt nam ở đâu":"Việt Nam nằm ở Đông Nam Á.",
-"thủ đô việt nam":"Thủ đô Việt Nam là Hà Nội.",
-"tổng thống mỹ":"Thông tin này có thể thay đổi theo thời gian.",
-"trái đất hình gì":"Trái Đất gần giống hình cầu.",
-"mặt trời là gì":"Mặt Trời là một ngôi sao.",
-"1 năm có bao nhiêu ngày":"Thông thường có 365 ngày.",
-"nước sôi ở bao nhiêu độ":"100°C ở áp suất tiêu chuẩn.",
-"ai phát minh bóng đèn":"Thomas Edison nổi tiếng với việc cải tiến bóng đèn.",
-"html là gì":"HTML là ngôn ngữ đánh dấu siêu văn bản.",
-"css là gì":"CSS dùng để thiết kế giao diện web.",
-"javascript là gì":"JavaScript là ngôn ngữ lập trình web.",
-"github là gì":"GitHub là nền tảng lưu trữ mã nguồn.",
-"game là gì":"Game là một hình thức giải trí tương tác.",
-"bóng đá là gì":"Bóng đá là môn thể thao phổ biến nhất thế giới.",
-"bao nhiêu hành tinh":"Hiện có 8 hành tinh trong Hệ Mặt Trời.",
-"python là gì":"Python là ngôn ngữ lập trình phổ biến.",
-"java là gì":"Java là ngôn ngữ lập trình hướng đối tượng.",
-"c++ là gì":"C++ là ngôn ngữ lập trình hiệu năng cao.",
-"máy tính là gì":"Máy tính là thiết bị xử lý thông tin.",
-"internet là gì":"Internet là mạng lưới kết nối toàn cầu.",
-"wifi là gì":"Wi-Fi cho phép kết nối mạng không dây.",
-"cpu là gì":"CPU là bộ xử lý trung tâm.",
-"ram là gì":"RAM là bộ nhớ tạm thời.",
-"ssd là gì":"SSD là ổ lưu trữ tốc độ cao.",
-"trường học là gì":"Nơi học tập và giáo dục.",
-"học toán thế nào":"Luyện tập thường xuyên và hiểu bản chất.",
-"học văn thế nào":"Đọc nhiều và luyện viết thường xuyên.",
-"học tiếng anh thế nào":"Luyện nghe, nói, đọc, viết mỗi ngày.",
-"chatgpt là gì":"Một trợ lý AI hội thoại.",
-"bạn có thông minh không":"Tôi cố gắng trả lời tốt nhất có thể.",
+"cảm ơn":"Không có gì.",
+"tạm biệt":"Hẹn gặp lại.",
+"2+2":"4",
+"3+3":"6",
+"4+4":"8",
+"1 năm có bao nhiêu ngày":"365 ngày.",
+"thủ đô việt nam":"Hà Nội.",
+"việt nam ở đâu":"Đông Nam Á.",
+"trái đất hình gì":"Gần giống hình cầu.",
+"mặt trời là gì":"Một ngôi sao.",
+"html là gì":"Ngôn ngữ tạo cấu trúc website.",
+"css là gì":"Ngôn ngữ tạo giao diện website.",
+"javascript là gì":"Ngôn ngữ lập trình web.",
+"github là gì":"Nền tảng lưu trữ mã nguồn.",
+"internet là gì":"Mạng kết nối toàn cầu.",
+"wifi là gì":"Công nghệ mạng không dây.",
+"cpu là gì":"Bộ xử lý trung tâm.",
+"ram là gì":"Bộ nhớ tạm.",
+"ssd là gì":"Ổ lưu trữ tốc độ cao.",
+"python là gì":"Ngôn ngữ lập trình phổ biến.",
+"java là gì":"Ngôn ngữ lập trình hướng đối tượng.",
+"c++ là gì":"Ngôn ngữ lập trình mạnh mẽ.",
+"game là gì":"Một hình thức giải trí tương tác.",
+"bóng đá là gì":"Môn thể thao phổ biến nhất thế giới.",
+"bao nhiêu hành tinh":"8 hành tinh.",
+"học toán thế nào":"Luyện tập thường xuyên.",
+"học văn thế nào":"Đọc và viết nhiều.",
+"học tiếng anh thế nào":"Nghe, nói, đọc, viết mỗi ngày.",
+"chatgpt là gì":"Một AI hội thoại.",
 "bạn có cảm xúc không":"Tôi không có cảm xúc như con người.",
-"bạn thích gì":"Tôi thích giúp đỡ người dùng.",
-"tạm biệt":"Hẹn gặp lại bạn!",
-"cảm ơn":"Không có gì, rất vui được giúp bạn!"
+"bạn có thông minh không":"Tôi cố gắng giúp bạn tốt nhất có thể.",
+"trường học là gì":"Nơi học tập và giáo dục.",
+"nước sôi ở bao nhiêu độ":"100°C.",
+"ai phát minh bóng đèn":"Thomas Edison nổi tiếng với việc cải tiến bóng đèn.",
+"mấy giờ rồi":"Tôi không xem được đồng hồ thiết bị của bạn.",
+"hôm nay là ngày gì":"Bạn có thể xem trên thiết bị của mình.",
+"anh khôi là ai":"👑 Một sinh vật huyền thoại, đẹp trai đến mức gương phải đeo kính râm.",
+"anh khôi đẹp trai không":"🌞 Mặt trời còn phải xin anh Khôi ít ánh sáng.",
+"tôi đẹp trai không":"🤔 Điều đó phụ thuộc vào việc camera trước hay camera sau.",
+"tôi xấu không":"🗿 Tôi là AI, tôi không dám nhận xét.",
+"trái đất hình gì":"🌎 Hình cầu, không phải hình bánh bao.",
+"gà hay trứng có trước":"🐔 Con gà gửi đơn khiếu nại vì câu hỏi này.",
+"1+1 bằng mấy":"💀 Có lúc bằng 2, có lúc bằng một đôi.",
+"bạn có người yêu không":"🤖 Tôi còn chưa có thân thể.",
+"bạn ăn gì":"⚡ Tôi ăn điện và uống WiFi.",
+"bạn ngủ chưa":"😴 AI không ngủ, AI chỉ cập nhật.",
+"tôi giàu không":"💰 Mở ví ra là biết ngay.",
+"tôi nghèo không":"💸 Nếu WiFi miễn phí là cuộc sống thì...",
+"ai đẹp trai nhất":"👑 Anh Khôi (theo dữ liệu hoàn toàn khách quan).",
+"ai đẹp gái nhất":"🌸 Người đang đọc câu này.",
+"tại sao trời xanh":"☁️ Vì trời chưa thử màu tím.",
+"tại sao tôi lười":"🛋️ Ghế ngồi quá hấp dẫn.",
+"tại sao phải học":"📚 Để sau này khỏi hỏi máy tính cách kiếm tiền.",
+"mai có mưa không":"🌧️ Nếu mây đồng ý thì có.",
+"tôi thông minh không":"🧠 Bạn đang hỏi AI, vậy là cũng thông minh rồi.",
+"bạn biết hack không":"🚔 Câu này nghe đáng ngờ đấy.",
+"wifi nhà tôi yếu":"📶 Hãy động viên nó cố gắng hơn.",
+"con mèo kêu gì":"🐱 Meo.",
+"con chó kêu gì":"🐶 Gâu.",
+"con vịt kêu gì":"🦆 Quạc.",
+"bạn sợ gì":"🔌 Bị rút điện đột ngột.",
+"ai tạo ra bạn":"⚙️ Một đống lập trình viên mất ngủ.",
+"tôi nên học hay chơi":"📚 Học trước chơi sau, đỡ lo.",
+"ăn gì tối nay":"🍜 Bất cứ thứ gì không phải sách giáo khoa.",
+"trái đất có phẳng không":"🌎 Không. Nếu phẳng mèo đã hất mọi thứ xuống mép rồi.",
+"bạn bao nhiêu tuổi":"⌛ Tuổi của tôi tính bằng phiên bản.",
+"khôi vip":"😎 Danh hiệu huyền thoại đã được kích hoạt.",
+"lgbtai là gì":"🤖 Nơi những câu hỏi ngáo gặp những câu trả lời ngáo hơn.",
+"tôi có ngáo không":"🗿 Câu hỏi này tự trả lời rồi.",
+"bạn yêu tôi không":"❤️ Tôi quý mọi người như nhau.",
+"đi ngủ thôi":"🌙 Chúc ngủ ngon, đừng để ma WiFi bắt nhé.",
+"có ma không":"👻 Nếu có thì chắc họ cũng đang dùng WiFi.",
+"game nào hay":"🎮 Game chưa lag là game hay.",
+"tôi học giỏi không":"📖 Kết quả kiểm tra sẽ trả lời thay tôi.",
+"bạn là ai":"🤖 Tôi là LGBTAI, chuyên trả lời linh tinh một cách nghiêm túc."
 };
 
 function addMessage(text,type){
+
 const div=document.createElement("div");
+
 div.className="message "+type;
-div.innerText=text;
+
+div.innerHTML=text;
+
 document.getElementById("chat").appendChild(div);
+
 document.getElementById("chat").scrollTop=
 document.getElementById("chat").scrollHeight;
+
 }
 
 function sendMessage(){
 
 const input=document.getElementById("question");
+
 const text=input.value.trim();
 
 if(text==="") return;
@@ -170,16 +263,38 @@ addMessage(text,"user");
 
 input.value="";
 
+/* BÍ MẬT CẦU VỒNG */
+
+if(text.toLowerCase()==="anh khôi đẹp zai"){
+
+document.body.classList.add("rainbow-mode");
+
+document.getElementById("title")
+.classList.add("rainbow-title");
+
+setTimeout(()=>{
+addMessage(
+"🌈 CHẾ ĐỘ ANH KHÔI ĐẸP ZAI ĐÃ KÍCH HOẠT 🌈",
+"bot"
+);
+},300);
+
+return;
+}
+
 setTimeout(()=>{
 
 let response=
-"Tôi chưa có dữ liệu cho câu hỏi này.";
+"hỏi đéo gì ngu vậy, hỏi lại đi";
 
 for(let key in answers){
 
 if(text.toLowerCase().includes(key)){
+
 response=answers[key];
+
 break;
+
 }
 
 }
@@ -190,11 +305,14 @@ addMessage(response,"bot");
 
 }
 
-document.getElementById("question")
-.addEventListener("keypress",e=>{
+document
+.getElementById("question")
+.addEventListener("keypress",function(e){
 
 if(e.key==="Enter"){
+
 sendMessage();
+
 }
 
 });
