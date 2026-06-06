@@ -318,6 +318,435 @@ sendMessage();
 });
 
 </script>
+<style>
+  #khoi-lock,
+  #khoi-chat-page {
+    position: fixed;
+    inset: 0;
+    z-index: 99999;
+    font-family: Arial, sans-serif;
+  }
 
+  #khoi-lock {
+    background: #111827;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .khoi-box {
+    width: min(90%, 360px);
+    background: #1f2937;
+    padding: 24px;
+    border-radius: 12px;
+    text-align: center;
+  }
+
+  .khoi-box h2 {
+    margin-bottom: 10px;
+  }
+
+  .khoi-box input {
+    width: 100%;
+    padding: 12px;
+    margin: 14px 0;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    outline: none;
+  }
+
+  .khoi-box button,
+  #khoi-send {
+    padding: 11px 16px;
+    border: none;
+    border-radius: 8px;
+    background: #22c55e;
+    color: white;
+    cursor: pointer;
+    font-size: 15px;
+  }
+
+  .khoi-box button:hover,
+  #khoi-send:hover {
+    opacity: 0.9;
+  }
+
+ #khoi-chat-page {
+  display: none;
+  background: linear-gradient(135deg, #22c55e, #ef4444, #ec4899);
+  background-size: 300% 300%;
+  animation: khoiColorMove 6s ease infinite;
+  color: #111827;
+}
+
+@keyframes khoiColorMove {
+  0% {
+    background-position: 0% 50%;
+  }
+
+  50% {
+    background-position: 100% 50%;
+  }
+
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+  .khoi-chat-wrap {
+    max-width: 720px;
+    height: 100%;
+    margin: auto;
+    display: flex;
+    flex-direction: column;
+  }
+
+ .khoi-header {
+  background: linear-gradient(90deg, #22c55e, #ef4444, #ec4899);
+  color: white;
+  padding: 16px;
+  font-size: 20px;
+  font-weight: bold;
+  text-align: center;
+}
+
+  #khoi-messages {
+    flex: 1;
+    padding: 16px;
+    overflow-y: auto;
+  }
+
+  .khoi-msg {
+    max-width: 75%;
+    padding: 10px 12px;
+    margin-bottom: 10px;
+    border-radius: 10px;
+    line-height: 1.4;
+    word-wrap: break-word;
+  }
+
+  .khoi-user {
+    margin-left: auto;
+    background: #2563eb;
+    color: white;
+  }
+
+  .khoi-bot {
+    margin-right: auto;
+    background: white;
+    border: 1px solid #ddd;
+    color: #111827;
+  }
+
+  .khoi-input-area {
+    display: flex;
+    gap: 8px;
+    padding: 12px;
+    background: white;
+    border-top: 1px solid #ddd;
+  }
+
+  #khoi-input {
+    flex: 1;
+    padding: 12px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    font-size: 15px;
+    outline: none;
+  }
+</style>
+
+<div id="khoi-lock">
+  <div class="khoi-box">
+    <h2>Trang bí mật</h2>
+    <p>Nhập mật mã để vào chat mới</p>
+    <input id="khoi-password" type="password" placeholder="Mật mã">
+    <button onclick="khoiCheckPassword()">Vào trang chat</button>
+    <p id="khoi-error" style="color:#f87171; margin-top:12px;"></p>
+  </div>
+</div>
+
+<div id="khoi-chat-page">
+  <div class="khoi-chat-wrap">
+    <div class="khoi-header">Chat bí mật của anh Khôi đi zet</div>
+
+    <div id="khoi-messages">
+      <div class="khoi-msg khoi-bot">Chào, mày đã vào trang chat bí mật.</div>
+    </div>
+
+    <div class="khoi-input-area">
+      <input id="khoi-input" type="text" placeholder="Nhập short quét sần...">
+      <button id="khoi-send" onclick="khoiSendMessage()">Gửi</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  function khoiCheckPassword() {
+    const password = document.getElementById("khoi-password").value.trim().toLowerCase();
+    const error = document.getElementById("khoi-error");
+
+    if (password === "khôi" || password === "khoi") {
+      document.getElementById("khoi-lock").style.display = "none";
+      document.getElementById("khoi-chat-page").style.display = "block";
+      document.getElementById("khoi-input").focus();
+    } else {
+      error.textContent = "Mật mã chưa đúng.";
+    }
+  }
+
+  function khoiAddMessage(text, type) {
+    const messages = document.getElementById("khoi-messages");
+    const msg = document.createElement("div");
+
+    msg.className = "khoi-msg " + (type === "user" ? "khoi-user" : "khoi-bot");
+    msg.textContent = text;
+
+    messages.appendChild(msg);
+    messages.scrollTop = messages.scrollHeight;
+  }
+
+  function khoiBotReply(question) {
+    const q = question.toLowerCase();
+
+    if (q.includes("xin chào") || q.includes("hello") || q.includes("hi")) {
+      return "ni hào!";
+    }
+
+    if (q.includes("mày là ai")) {
+      return "MÀY CỞI ĐỒ MÀY RA!!!.";
+    }
+
+    if (q.includes("MÀY tên gì") || q.includes("tên bạn")) {
+      return "MÀY CỞI ĐỒ MÀY RA!!!.";
+    }
+
+    if (q.includes("khôi là ai")) {
+      return "Khôi là người MÀY CẢ ĐỜI CŨNG KHÔNG BẰNG, MỘT HUYỀN THOẠI.";
+    }
+
+    if (q.includes("khôi đẹp trai không")) {
+      return "THẾ CŨNG PHẢI HỎI.";
+    }
+
+    if (q.includes("ai đẹp trai nhất")) {
+      return "Chắc là Khôi rồi.";
+    }
+
+    if (q.includes("cảm ơn")) {
+      return "Không có gì.";
+    }
+
+    if (q.includes("tạm biệt") || q.includes("bye")) {
+      return "Tạm biệt nhé.";
+    }
+
+    if (q.includes("hôm nay")) {
+      return "Hôm nay là một ngày tốt.";
+    }
+
+    if (q.includes("mấy giờ")) {
+      return "Bạn xem đồng hồ trên máy nhé.";
+    }
+
+    if (q.includes("2+2")) {
+      return "4.";
+    }
+
+    if (q.includes("1+1")) {
+      return "2.";
+    }
+
+    if (q.includes("3+3")) {
+      return "6.";
+    }
+
+    if (q.includes("4+4")) {
+      return "8.";
+    }
+
+    if (q.includes("5+5")) {
+      return "10.";
+    }
+
+    if (q.includes("việt nam ở đâu")) {
+      return "Ở Đông Nam Á.";
+    }
+
+    if (q.includes("thủ đô việt nam")) {
+      return "Hà Nội.";
+    }
+
+    if (q.includes("trái đất hình gì")) {
+      return "Gần giống hình cầu.";
+    }
+
+    if (q.includes("mặt trời là gì")) {
+      return "Một ngôi sao.";
+    }
+
+    if (q.includes("mặt trăng là gì")) {
+      return "Vệ tinh tự nhiên của Trái Đất.";
+    }
+
+    if (q.includes("html là gì")) {
+      return "Ngôn ngữ tạo cấu trúc web.";
+    }
+
+    if (q.includes("css là gì")) {
+      return "Ngôn ngữ tạo giao diện web.";
+    }
+
+    if (q.includes("javascript là gì")) {
+      return "Ngôn ngữ lập trình cho web.";
+    }
+
+    if (q.includes("internet là gì")) {
+      return "Mạng kết nối toàn cầu.";
+    }
+
+    if (q.includes("wifi là gì")) {
+      return "Mạng không dây.";
+    }
+
+    if (q.includes("cpu là gì")) {
+      return "Bộ xử lý trung tâm.";
+    }
+
+    if (q.includes("ram là gì")) {
+      return "Bộ nhớ tạm của máy tính.";
+    }
+
+    if (q.includes("ssd là gì")) {
+      return "Ổ lưu trữ tốc độ cao.";
+    }
+
+    if (q.includes("game là gì")) {
+      return "Một hình thức giải trí.";
+    }
+
+    if (q.includes("bóng đá là gì")) {
+      return "Một môn thể thao rất phổ biến.";
+    }
+
+    if (q.includes("học thế nào cho tốt")) {
+      return "Học đều mỗi ngày.";
+    }
+
+    if (q.includes("học toán thế nào")) {
+      return "Làm bài tập thường xuyên.";
+    }
+
+    if (q.includes("học văn thế nào")) {
+      return "Đọc và viết nhiều hơn.";
+    }
+
+    if (q.includes("học tiếng anh thế nào")) {
+      return "Nghe, nói, đọc, viết mỗi ngày.";
+    }
+
+    if (q.includes("bạn có cảm xúc không")) {
+      return "Mình không có cảm xúc thật.";
+    }
+
+    if (q.includes("bạn có thông minh không")) {
+      return "Mình cố gắng trả lời tốt nhất.";
+    }
+
+    if (q.includes("bạn ăn gì")) {
+      return "Mình không cần ăn.";
+    }
+
+    if (q.includes("bạn ngủ chưa")) {
+      return "Mình không ngủ.";
+    }
+
+    if (q.includes("tôi nên học hay chơi")) {
+      return "Học trước, chơi sau.";
+    }
+
+    if (q.includes("ăn gì tối nay")) {
+      return "Ăn món bạn thích nhất.";
+    }
+
+    if (q.includes("tôi thông minh không")) {
+      return "Bạn hỏi được câu này là cũng thông minh rồi.";
+    }
+
+    if (q.includes("tôi đẹp không")) {
+      return "Bạn tự tin là đẹp.";
+    }
+
+    if (q.includes("có ma không")) {
+      return "Mình chưa thấy bao giờ.";
+    }
+
+    if (q.includes("trường học là gì")) {
+      return "Nơi để học tập.";
+    }
+
+    if (q.includes("nước sôi bao nhiêu độ")) {
+      return "Khoảng 100 độ C.";
+    }
+
+    if (q.includes("chatgpt là gì")) {
+      return "Một AI hội thoại.";
+    }
+
+    if (q.includes("github là gì")) {
+      return "Nơi lưu trữ mã nguồn.";
+    }
+
+    if (q.includes("python là gì")) {
+      return "Một ngôn ngữ lập trình.";
+    }
+
+    if (q.includes("java là gì")) {
+      return "Một ngôn ngữ lập trình.";
+    }
+
+    if (q.includes("ai tạo ra bạn")) {
+      return "Mình được tạo bằng code.";
+    }
+
+    if (q.includes("bạn yêu tôi không")) {
+      return "Mình quý bạn.";
+    }
+
+    if (q.includes("lgbtai là gì")) {
+      return "Một trang chat trả lời câu hỏi ngắn.";
+    }
+
+    return "KHÔNG TIỆN TRẢ LỜI.";
+  }
+
+  function khoiSendMessage() {
+    const input = document.getElementById("khoi-input");
+    const text = input.value.trim();
+
+    if (text === "") return;
+
+    khoiAddMessage(text, "user");
+    input.value = "";
+
+    setTimeout(function () {
+      khoiAddMessage(khoiBotReply(text), "bot");
+    }, 300);
+  }
+
+  document.getElementById("khoi-password").addEventListener("keydown", function (e) {
+    if (e.key === "Enter") {
+      khoiCheckPassword();
+    }
+  });
+
+  document.getElementById("khoi-input").addEventListener("keydown", function (e) {
+    if (e.key === "Enter") {
+      khoiSendMessage();
+    }
+  });
+</script>
 </body>
 </html>
